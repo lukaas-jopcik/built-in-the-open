@@ -1,0 +1,12 @@
+.env
+.env.*
+*.sqlite
+*.sqlite3
+portraits/
+__pycache__/
+*.pyc
+*.pem
+*.key
+id_ed25519*
+credentials*
+.DS_Store
