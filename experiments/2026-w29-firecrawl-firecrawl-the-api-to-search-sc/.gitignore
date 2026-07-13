@@ -1,0 +1,4 @@
+data/runs/*.json
+dashboard.html
+__pycache__/
+*.pyc
