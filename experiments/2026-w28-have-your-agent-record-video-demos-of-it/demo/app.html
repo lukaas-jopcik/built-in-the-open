@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Agent Demo</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:Inter,sans-serif; background:#7E1621; color:#F2E8D6;
+         display:flex; align-items:center; justify-content:center;
+         height:100vh; position:relative; overflow:hidden; }
+  .wave { position:absolute; left:-15%; right:-15%; height:340px; bottom:-120px;
+    background:
+      radial-gradient(55% 42% at 28% 62%, rgba(174,195,232,.40) 0%, rgba(174,195,232,0) 70%),
+      radial-gradient(60% 36% at 66% 40%, rgba(214,226,248,.28) 0%, rgba(214,226,248,0) 70%);
+    filter:blur(24px); transform:rotate(-6deg); pointer-events:none; }
+  .kicker { position:absolute; top:44px; left:56px; font-size:15px;
+            letter-spacing:.18em; color:#9FB3D9; text-transform:uppercase;
+            font-weight:600; }
+  .footer { position:absolute; bottom:36px; left:56px; font-size:15px;
+            color:#F2E8D6; opacity:.9; }
+  .footer span { opacity:.55; padding:0 8px; }
+  .card { background:rgba(106,17,25,.55); border:1.5px solid rgba(174,195,232,.35);
+          border-radius:22px; padding:52px 56px; width:480px; text-align:center;
+          box-shadow:0 34px 90px rgba(0,0,0,.4); backdrop-filter:blur(4px);
+          position:relative; z-index:2; }
+  h1 { font-family:Fraunces,serif; font-size:34px; font-weight:700;
+       margin-bottom:30px; color:#F2E8D6; }
+  h1 em { color:#AEC3E8; font-style:normal; }
+  input { width:100%; padding:14px 16px; border-radius:12px;
+          border:1.5px solid rgba(174,195,232,.4); background:rgba(11,13,15,.35);
+          color:#F2E8D6; font-size:16px; font-family:Inter,sans-serif;
+          margin-bottom:16px; outline:none; transition:border .2s; }
+  input:focus { border-color:#AEC3E8; }
+  button { padding:13px 26px; border-radius:12px; border:none;
+           background:#AEC3E8; color:#5A0E17; font-size:16px; font-weight:600;
+           font-family:Inter,sans-serif; cursor:pointer; margin:6px;
+           transition:transform .15s ease, filter .15s ease; }
+  button:hover { filter:brightness(1.06); }
+  button:active { transform:scale(.96); }
+  #counter-btn { background:transparent; color:#AEC3E8;
+                 border:1.5px solid #AEC3E8; }
+  #greeting { min-height:34px; margin-top:20px; font-family:Fraunces,serif;
+              font-size:24px; color:#F2E8D6; }
+  #count-row { margin-top:16px; font-family:"JetBrains Mono",monospace;
+               font-size:15px; color:#D9BFC0; }
+  #count { color:#AEC3E8; font-weight:700; font-size:19px; }
+</style>
+</head>
+<body>
+  <div class="wave"></div>
+  <div class="kicker">Built in the open · Agent-recorded demo</div>
+  <div class="card">
+    <h1>Agent Demo <em>Widget</em></h1>
+    <input id="name-input" placeholder="Your name">
+    <div>
+      <button id="greet-btn">Greet me</button>
+      <button id="counter-btn">Click counter</button>
+    </div>
+    <div id="greeting"></div>
+    <div id="count-row">clicks: <span id="count">0</span></div>
+  </div>
+  <div class="footer">Lukas Jopcik <span>|</span> built in the open</div>
+  <script>
+    let n = 0;
+    document.getElementById("greet-btn").onclick = () => {
+      const v = document.getElementById("name-input").value || "stranger";
+      document.getElementById("greeting").textContent = "Hello, " + v + "! 👋";
+    };
+    document.getElementById("counter-btn").onclick = () => {
+      document.getElementById("count").textContent = ++n;
+    };
+  </script>
+</body>
+</html>

@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Agent Swarm</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:Inter,sans-serif; background:#5A0E17; color:#F2E8D6;
+         width:1280px; height:800px; overflow:hidden; position:relative; }
+  .wave { position:absolute; left:-15%; right:-15%; height:420px; bottom:-160px;
+    background:
+      radial-gradient(55% 42% at 28% 62%, rgba(174,195,232,.32) 0%, rgba(174,195,232,0) 70%),
+      radial-gradient(60% 36% at 66% 40%, rgba(214,226,248,.22) 0%, rgba(214,226,248,0) 70%);
+    filter:blur(30px); transform:rotate(-6deg); pointer-events:none; }
+  .kicker { position:absolute; top:36px; left:56px; font-size:14px;
+            letter-spacing:.18em; color:#9FB3D9; text-transform:uppercase;
+            font-weight:600; }
+  #elapsed { position:absolute; top:34px; right:56px; font-family:"JetBrains Mono",monospace;
+             font-size:18px; color:#AEC3E8; font-weight:700; }
+  .titlebar { position:absolute; top:78px; left:56px; right:56px; }
+  h1 { font-family:Fraunces,serif; font-size:36px; font-weight:700; color:#F2E8D6; }
+  h1 em { color:#AEC3E8; font-style:normal; }
+  .subline { margin-top:8px; font-size:16px; color:#D9BFC0; }
+  #shipped-count { font-family:"JetBrains Mono",monospace; color:#AEC3E8; font-weight:700; }
+
+  .board { position:absolute; top:190px; left:56px; right:56px; display:grid;
+           grid-template-columns:repeat(3, 1fr); gap:20px; z-index:2; }
+  .card { background:rgba(106,17,25,.55); border:1.5px solid rgba(174,195,232,.30);
+          border-radius:18px; padding:22px 22px 20px; box-shadow:0 20px 50px rgba(0,0,0,.35);
+          backdrop-filter:blur(4px); transition:border-color .3s ease, background .3s ease, transform .3s ease; }
+  .card .agent { font-family:"JetBrains Mono",monospace; font-size:12px; letter-spacing:.06em;
+                 color:#9FB3D9; text-transform:uppercase; margin-bottom:10px; }
+  .card .task { font-family:Fraunces,serif; font-size:19px; font-weight:600; color:#F2E8D6;
+                margin-bottom:16px; min-height:52px; }
+  .card .status { display:flex; align-items:center; gap:9px; font-size:14px; font-weight:600; }
+  .card .dot { width:10px; height:10px; border-radius:50%; background:#D9BFC0; flex:none; }
+  .card .bar { height:5px; border-radius:3px; background:rgba(242,232,214,.15); margin-top:14px; overflow:hidden; }
+  .card .bar-fill { height:100%; width:0%; background:#AEC3E8; border-radius:3px; transition:width linear; }
+
+  .card.queued .status { color:#D9BFC0; }
+  .card.running { border-color:rgba(174,195,232,.75); background:rgba(106,17,25,.75); transform:translateY(-2px); }
+  .card.running .status { color:#AEC3E8; }
+  .card.running .dot { background:#AEC3E8; animation:pulse 0.9s ease-in-out infinite; }
+  .card.done { border-color:rgba(174,195,232,.9); background:rgba(52,120,90,.28); }
+  .card.done .status { color:#BFE8C9; }
+  .card.done .dot { background:#7ED9A0; animation:none; }
+  .card.done .bar-fill { background:#7ED9A0; }
+
+  @keyframes pulse { 0%,100% { opacity:1; transform:scale(1); } 50% { opacity:.4; transform:scale(1.4); } }
+
+  #run-btn { position:absolute; bottom:44px; left:56px; padding:14px 28px; border-radius:12px; border:none;
+             background:#AEC3E8; color:#5A0E17; font-size:16px; font-weight:700;
+             font-family:Inter,sans-serif; cursor:pointer; }
+  #run-btn:disabled { opacity:.5; cursor:default; }
+  .footer { position:absolute; bottom:50px; right:56px; font-size:14px; color:#F2E8D6; opacity:.75; }
+
+  #summary { position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+             background:rgba(30,4,8,0); pointer-events:none; opacity:0; transition:opacity .5s ease, background .5s ease; z-index:5; }
+  #summary.show { opacity:1; pointer-events:auto; background:rgba(30,4,8,.62); }
+  #summary .panel { background:rgba(106,17,25,.92); border:1.5px solid rgba(174,195,232,.5);
+                     border-radius:22px; padding:48px 64px; text-align:center; box-shadow:0 40px 100px rgba(0,0,0,.5);
+                     transform:scale(.92); transition:transform .5s ease; }
+  #summary.show .panel { transform:scale(1); }
+  #summary h2 { font-family:Fraunces,serif; font-size:38px; font-weight:700; color:#F2E8D6; margin-bottom:14px; }
+  #summary .time { font-family:"JetBrains Mono",monospace; color:#AEC3E8; font-weight:700; }
+  #summary p { font-size:16px; color:#D9BFC0; }
+</style>
+</head>
+<body>
+  <div class="wave"></div>
+  <div class="kicker">Agent swarm &middot; live run</div>
+  <div id="elapsed">0.0s</div>
+  <div class="titlebar">
+    <h1>Shipping the <em>roadmap</em></h1>
+    <div class="subline"><span id="shipped-count">0</span>/6 tasks shipped</div>
+  </div>
+
+  <div class="board" id="board"></div>
+
+  <button id="run-btn">Run swarm</button>
+  <div class="footer">Lukas Jopcik &middot; built in the open</div>
+
+  <div id="summary">
+    <div class="panel">
+      <h2>&#127881; 6/6 shipped</h2>
+      <p>in <span class="time" id="summary-time">0.0s</span> &middot; agent swarm, zero manual clicks</p>
+    </div>
+  </div>
+
+<script>
+  const TASKS = [
+    { agent: "Agent A", task: "Design database schema", duration: 2200, delay: 0 },
+    { agent: "Agent B", task: "Build REST API", duration: 2800, delay: 350 },
+    { agent: "Agent C", task: "Write integration tests", duration: 2000, delay: 700 },
+    { agent: "Agent D", task: "Style landing page", duration: 2600, delay: 1050 },
+    { agent: "Agent E", task: "Record demo video", duration: 2400, delay: 1400 },
+    { agent: "Agent F", task: "Ship to production", duration: 2200, delay: 1750 },
+  ];
+
+  const board = document.getElementById("board");
+  TASKS.forEach((t, i) => {
+    const card = document.createElement("div");
+    card.className = "card queued";
+    card.id = "card-" + i;
+    card.innerHTML =
+      '<div class="agent">' + t.agent + '</div>' +
+      '<div class="task">' + t.task + '</div>' +
+      '<div class="status"><span class="dot"></span><span class="label">Queued</span></div>' +
+      '<div class="bar"><div class="bar-fill"></div></div>';
+    board.appendChild(card);
+  });
+
+  let shippedCount = 0;
+  let running = false;
+  let startTime = null;
+  let tickHandle = null;
+
+  function setStatus(card, cls, label) {
+    card.className = "card " + cls;
+    card.querySelector(".label").textContent = label;
+  }
+
+  document.getElementById("run-btn").onclick = () => {
+    if (running) return;
+    running = true;
+    document.getElementById("run-btn").disabled = true;
+    startTime = Date.now();
+    tickHandle = setInterval(() => {
+      document.getElementById("elapsed").textContent =
+        ((Date.now() - startTime) / 1000).toFixed(1) + "s";
+    }, 100);
+
+    let maxFinish = 0;
+    TASKS.forEach((t, i) => {
+      const card = document.getElementById("card-" + i);
+      const fill = card.querySelector(".bar-fill");
+      const finish = t.delay + t.duration;
+      maxFinish = Math.max(maxFinish, finish);
+
+      setTimeout(() => {
+        setStatus(card, "running", "Running");
+        fill.style.transition = "width " + (t.duration / 1000) + "s linear";
+        requestAnimationFrame(() => { fill.style.width = "100%"; });
+      }, t.delay);
+
+      setTimeout(() => {
+        setStatus(card, "done", "Shipped");
+        shippedCount++;
+        document.getElementById("shipped-count").textContent = shippedCount;
+      }, finish);
+    });
+
+    setTimeout(() => {
+      clearInterval(tickHandle);
+      const elapsedS = ((Date.now() - startTime) / 1000).toFixed(1);
+      document.getElementById("elapsed").textContent = elapsedS + "s";
+      document.getElementById("summary-time").textContent = elapsedS + "s";
+      document.getElementById("summary").classList.add("show");
+    }, maxFinish + 500);
+  };
+</script>
+</body>
+</html>

@@ -1,0 +1,7 @@
+{
+  "experiment": "2026-w28-have-your-agent-record-video-demos-of-it",
+  "cost_usd": 7.9497,
+  "claude_runs": 13,
+  "window_from": "2026-07-06 07:38:02",
+  "note": "from cost.jsonl purpose=exp_* (subscription runs log $0)"
+}

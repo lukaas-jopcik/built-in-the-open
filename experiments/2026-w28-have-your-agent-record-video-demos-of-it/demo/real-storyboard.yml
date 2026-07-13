@@ -1,0 +1,20 @@
+url: http://localhost:8934/swarm.html
+viewport:
+  width: 1280
+  height: 800
+# demo/swarm.html is an original, on-brand "agent swarm" task board (not a
+# third-party product) — six cards go queued -> running -> shipped in
+# parallel, then a celebratory summary panel appears. No fixed sleeps for
+# the payoff: wait_for the real DOM signal (#summary.show) that the run
+# actually finished.
+scenes:
+  - name: board loaded, queued
+    do:
+      - pause: 1.5
+  - name: run the swarm
+    do:
+      - click: "#run-btn"
+  - name: swarm finishes, summary appears
+    do:
+      - wait_for: "#summary.show"
+      - pause: 3.0

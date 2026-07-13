@@ -1,0 +1,28 @@
+url: http://localhost:8934/app.html
+viewport:
+  width: 1280
+  height: 800
+scenes:
+  - name: pause on load
+    do:
+      - pause: 1.0
+  - name: type name
+    do:
+      - type:
+          into: "#name-input"
+          text: Claude
+      - pause: 0.5
+  - name: greet
+    do:
+      - click: "#greet-btn"
+      - wait_for: "#greeting:has-text('Hello, Claude')"
+      - pause: 1.2
+  - name: counter
+    do:
+      - click: "#counter-btn"
+      - pause: 0.4
+      - click: "#counter-btn"
+      - pause: 0.4
+      - click: "#counter-btn"
+      - wait_for: "#count:has-text('3')"
+      - pause: 1.5
