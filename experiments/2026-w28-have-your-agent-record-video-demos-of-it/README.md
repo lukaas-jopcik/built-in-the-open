@@ -51,4 +51,4 @@ _link added when the LinkedIn post is live_
 
 **Cost:** $8.18 across 15 Claude run(s) — see `cost.json`.
 
-<sub>Part of [built in the open](../../) — real experiments. real numbers. built in the open · by [Lukáš Jopčík](https://www.linkedin.com/in/luk%C3%A1%C5%A1-jop%C4%8D%C3%ADk-087064223/)</sub>
+<sub>Part of [built in the open](../../) — real experiments, real numbers · by [Lukáš Jopčík](https://www.linkedin.com/in/luk%C3%A1%C5%A1-jop%C4%8D%C3%ADk-087064223/)</sub>
