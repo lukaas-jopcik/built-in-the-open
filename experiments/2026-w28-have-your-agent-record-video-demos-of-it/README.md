@@ -1,116 +1,54 @@
-# Agent-recorded video demos (shot-scraper)
+[← all experiments](../../)
 
-An agent can drive a real (headless) browser through your product and
-export a real MP4 + a LinkedIn-ready caption, with zero manual screen
-recording. This repo is the proof-of-concept; this file is how to point it
-at *your* product in under 10 minutes.
+# Agent-Recorded Demos with shot-scraper
 
-## What's here
+*An agent recorded its own on-brand demo clip in 12 seconds of wall time, $0 API spend, 100% success across 20 back-to-back runs.*
 
-- `setup.sh` — one-time: creates `.venv`, installs `shot-scraper`, downloads
-  Playwright's Chromium, checks for `ffmpeg`.
-- `record.sh` / `demo/storyboard.yml` — records the toy local demo
-  (`demo/app.html`) to `output/demo.mp4`.
-- `real-record.sh` / `demo/real-storyboard.yml` / `demo/swarm.html` — the
-  wow-shot demo: an on-brand "agent swarm" task board where six cards ship
-  in parallel, ending on a summary card, recorded to `output/real-demo.mp4`.
-  This used to record a real external site (imaketoday.com's landing →
-  pricing flow); the PRD's "Wow shot" direction later overrode that — no
-  third-party product and no external network dependency in the payoff
-  shot, an original demo instead. See "Pointing this at your own product"
-  below for how to swap in a *real* external site if that's what you need.
-- `benchmark.md` — N=10 success-rate/timing numbers for both.
+## The wave
 
-## Honest prerequisites
+Agents ship features faster than anyone can screen-record them. Proving "it works" still means a human opening a screen recorder, clicking through a flow, and trimming the clip. `shot-scraper video` lets the agent that built the feature also record the proof, unattended, as part of the same pipeline.
 
-The PRD's "just Python 3" framing undersold this — here's what's actually
-required:
+## The build
 
-- **Python 3** with the stdlib `venv` module available. On Debian/Ubuntu
-  this is sometimes a separate `python3-venv` package; `setup.sh` will try
-  to `apt-get install` it automatically **only if you're root on a
-  Debian/Ubuntu-family box**. On macOS, Windows, non-Debian Linux, or as a
-  non-root user, and `venv` is missing, you'll need to install it yourself
-  first — `setup.sh` will fail with a clear message rather than hanging.
-- **A system `ffmpeg` binary on `PATH`.** `shot-scraper video --mp4` shells
-  out to it for WebM→MP4 transcoding (this is separate from the ffmpeg
-  Playwright bundles for its own use). Same auto-install caveat as above:
-  automatic only for root on Debian/Ubuntu; otherwise `brew install ffmpeg`
-  / your distro's package manager / manual download.
-- **Network egress** to PyPI (`pip install shot-scraper`) and to
-  `cdn.playwright.dev` (~150MB+ Chromium download, one-time). If your
-  network blocks either, `setup.sh` will fail during that step.
-- **A container/init that reaps zombie processes**, if you're running this
-  in a loop (CI, one recording per PR, etc.) — see "Known limitation" below.
+- `setup.sh` installs `shot-scraper` and Playwright's Chromium into a repo-local venv, zero prompts.
+- `record.sh` serves a static demo page, drives it through `shot-scraper`, and writes `output/demo.mp4` plus a LinkedIn-ready `output/caption.md`.
+- `real-record.sh` records a second, on-brand "wow shot": an agent-swarm task board where six cards animate queued → running → shipped in parallel, ending on a summary card.
+- Both scripts verify the HTTP server actually bound the port, fall back to a free port if not, and clean up so no `.webm` clutter is left behind.
+- Tested with `ffprobe` (duration, resolution, codec), extracted frames to visually confirm real rendered content, and benchmarked N=10 back-to-back runs of each demo.
 
-None of this needs a paid API key or account signup; everything above is a
-one-time local/system setup cost, not a per-recording cost.
+## The numbers
 
-## Pointing this at your own product
+- Toy demo video duration: **5.0s**, resolution **1280x800**, size **~68KB**
+- Toy demo success rate: **10/10** (benchmark), **6/6** (review session)
+- Toy demo wall time: p50 **6.77s**, p95 **6.83s**
+- Swarm demo video duration: **9.3–9.4s**, resolution **1280x800**, size **~456KB**
+- Swarm demo success rate: **10/10** (benchmark), **4/4** (review session)
+- Swarm demo wall time: p50 **11.83s**, p95 **11.90s**
+- Cost per clip: **$0** in API spend
+- Caveat — zombie processes: **58 → 85** (+27) defunct `chrome-headless` processes accumulated over one review session's ~12 recordings; not reaped by this sandbox's PID 1, and not fixable from inside the repo's own scripts.
+- Caveat — cold-cache install time (<2 minutes) was **never independently measured**: the sandbox blocks deleting the shared Playwright cache needed to test it.
+- Caveat — both demo pages load fonts live from `fonts.googleapis.com`, a real external network dependency the docs elsewhere describe as eliminated.
 
-This repo's own `real-record.sh` now targets a local, self-contained page
-(`demo/swarm.html`) rather than a live external site, on purpose — see
-"What's here" above. The steps below are for when *you* want to point this
-technique at your actual product, which is very likely a real external
-site.
+## Run it
 
-1. **Write your own storyboard**, copying `demo/real-storyboard.yml` as a
-   template. Key fields:
-   ```yaml
-   url: https://your-product.example.com/
-   viewport: {width: 1280, height: 800}
-   cursor: true          # draws a simulated mouse cursor — much more
-                          # watchable than actions happening with no cursor
-   wait_for: "selector"   # wait for a real signal the page has rendered
-                          # before recording starts (not a fixed sleep)
-   scenes:
-     - name: some scene
-       do:
-         - click: "selector"
-         - type: {into: "selector", text: "..."}
-         - wait_for: "selector:has-text('...')"
-         - pause: 1.5     # SECONDS, not ms — see gotcha below
-   ```
-2. **Run it once manually first** to find your real selectors — don't guess
-   from memory of the DOM, `curl` the page (or run
-   `.venv/bin/shot-scraper video yourboard.yml` once and read the error) and
-   check for ambiguous matches before committing to a selector.
-3. **Iterate on failures out loud.** The two real failure modes we hit
-   building the original `real-demo.mp4` extension against a live site
-   (imaketoday.com, before the wow-shot pivot to a local demo) — still the
-   two things most likely to bite you against any real external product:
-   - **Strict-mode selector violations.** Playwright's `click`/`wait_for`
-     refuse to act when a selector matches more than one element (e.g.
-     `text=YourLogo` matching the header logo *and* a footer logo *and* a
-     copyright line) — it fails loudly rather than silently clicking the
-     wrong thing. Fix: scope to a parent landmark, e.g.
-     `header a[href='/pricing']` instead of a bare `a[href='/pricing']`.
-   - **Async/loading states.** Real product pages fetch data after initial
-     load (spinners, skeleton screens). Never use a fixed `pause:` to wait
-     for content to appear — use `wait_for: "selector"` with a selector that
-     only exists once the real content has rendered (e.g. wait for the
-     actual heading text, not just "the page responded").
-4. **Run it:** `.venv/bin/shot-scraper video yourboard.yml --mp4 -o output/yours.webm`.
-   If you're hitting a live network dependency you don't control, wrap the
-   call in a retry loop (a few attempts with a short sleep between) so one
-   transient network hiccup doesn't fail the whole recording.
+```bash
+./setup.sh          # installs shot-scraper + Chromium into a repo-local venv
+./record.sh          # records the toy demo to output/demo.mp4 + output/caption.md
+./real-record.sh      # records the on-brand swarm demo to output/real-demo.mp4
+ffprobe -v error -show_entries format=duration -of csv=p=0 output/demo.mp4
+cat output/caption.md
+```
 
-## The one gotcha that will bite you
+## Verdict
 
-`pause:` in a shot-scraper storyboard is in **seconds**, not milliseconds —
-easy to get wrong by analogy to JS `setTimeout`/CSS `transition-duration`
-conventions. Using `pause: 500` meaning "500ms" actually pauses for over 8
-minutes. Use fractional seconds (`pause: 0.5`) for anything sub-second.
+Worked. An agent can unattended produce a real, playable MP4 and a ready-to-post caption in seconds, for free. It has only ever been proven against pages the builder fully controls, not a real product with logins, spinners, or a JS framework — pointing it at an actual SaaS dashboard is real selector-debugging work, not a URL swap. The zombie-process leak is real and unbounded without a container-level init fix.
 
-## Known limitation: zombie processes
+## Post
 
-Every `shot-scraper video` run leaves ~2 defunct `[chrome-headless]`
-processes behind, reparented to PID 1 once their real parent exits. In a
-container/sandbox whose PID 1 isn't a real init (no `tini`/`dumb-init`),
-these are never reaped — confirmed at 58 zombies after 26 runs in this
-sandbox's session (see `benchmark.md`). This can't be fixed from inside
-`record.sh`: a process can only `wait()` on its own children, and these are
-already reparented away by the time they're visible. If you're running this
-in a loop (e.g. CI, one recording per PR), run the container with a real
-init — `docker run --init ...` or a `tini`/`dumb-init` entrypoint — so PID 1
-actually reaps them.
+_link added when the LinkedIn post is live_
+
+---
+
+**Cost:** $8.18 across 15 Claude run(s) — see `cost.json`.
+
+<sub>Part of [built in the open](../../) — real experiments. real numbers. built in the open · by [Lukáš Jopčík](https://www.linkedin.com/in/luk%C3%A1%C5%A1-jop%C4%8D%C3%ADk-087064223/)</sub>

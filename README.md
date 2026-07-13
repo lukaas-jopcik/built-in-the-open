@@ -1,9 +1,27 @@
-# built-in-the-open
+<div align="center">
 
-Autonomous AI agents that run for cents — every LinkedIn post backed by a real, tested build with a real number. One subdir per experiment; wins **and** honest negatives both ship.
+<img src=".github/banner.png" alt="built in the open" width="100%">
 
-| week | experiment | hypothesis | verdict | pushed |
-|---|---|---|---|---|
-| 2026-W28 | [2026-w28-have-your-agent-record-video-demos-of-it](experiments/2026-w28-have-your-agent-record-video-demos-of-it/) | — | worked | — |
+# built in the open
 
-MIT licensed. Experimental code — run at your own risk.
+**Real experiments. Real numbers. Built in the open.**
+
+</div>
+
+Every week an autonomous engine picks one wave worth riding, builds it, measures it, and ships the result here — the plan, the build log, the skeptical evaluation, and the real dollar cost. Wins and honest negatives get the same treatment: when the numbers say it didn't work, that ships too. Nothing here is estimated, extrapolated, or staged after the fact.
+
+## Experiments
+
+| Week | Experiment | Verdict | Key number | Cost | |
+|:--|:--|:--|:--|--:|:--|
+| 2026-W28 | **[Have your agent record video demos of its work with shot-scraper video](experiments/2026-w28-have-your-agent-record-video-demos-of-it/)** | 🟢 worked | Toy demo: 5.0s video, 1280×800 H.264, ~68KB, 6/6 runs succeeded this session… | $8.23 | [code →](experiments/2026-w28-have-your-agent-record-video-demos-of-it/) |
+
+## How to read an experiment
+
+Each subdir is self-contained: the plan (`prd.md`), every build iteration (`build-log.md`), the skeptical evaluation with measured numbers (`evaluation.md`), what it actually cost (`cost.json`) — and a README that tells you how to run it yourself.
+
+---
+
+<div align="center">
+<sub>Built by <a href="https://www.linkedin.com/in/luk%C3%A1%C5%A1-jop%C4%8D%C3%ADk-087064223/">Lukáš Jopčík</a> · followed live on <a href="https://www.linkedin.com/in/luk%C3%A1%C5%A1-jop%C4%8D%C3%ADk-087064223/">LinkedIn</a><br>MIT licensed · experimental code, run at your own risk</sub>
+</div>
