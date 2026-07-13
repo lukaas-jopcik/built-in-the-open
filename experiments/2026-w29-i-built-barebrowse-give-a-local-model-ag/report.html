@@ -1,0 +1,4244 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>barebrowse — agent run report</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0f1117;
+  --panel: #171a24;
+  --panel-2: #1d2130;
+  --border: #2a2f42;
+  --text: #e8e9f3;
+  --muted: #9098b5;
+  --periwinkle: #8c9eff;
+  --periwinkle-dim: #5b67a8;
+  --shadow-red: #ff7a7a;
+  --good: #6fe3b4;
+  --bad: #ff8b8b;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  line-height: 1.5;
+}
+.wrap { max-width: 980px; margin: 0 auto; padding: 48px 24px 96px; }
+.big { font-family: 'Fraunces', Georgia, serif; }
+header.hero { margin-bottom: 40px; }
+header.hero .brand {
+  font-family: 'Fraunces', Georgia, serif;
+  font-size: 15px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--periwinkle);
+  margin: 0 0 12px;
+}
+header.hero h1 {
+  font-family: 'Fraunces', Georgia, serif;
+  font-size: 40px;
+  margin: 0 0 12px;
+  font-weight: 600;
+}
+header.hero p.desc { color: var(--muted); font-size: 16px; max-width: 640px; margin: 0; }
+
+.counters {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin: 36px 0 44px;
+}
+.counter-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 20px 24px;
+}
+.counter-card .label {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+.counter-card .num {
+  font-size: 40px;
+  font-weight: 600;
+}
+.counter-card.snapshot .num { color: var(--periwinkle); }
+.counter-card.raw .num { color: var(--shadow-red); }
+
+h2.section {
+  font-family: 'Fraunces', Georgia, serif;
+  font-size: 22px;
+  margin: 48px 0 18px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.step {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  margin-bottom: 18px;
+  overflow: hidden;
+}
+.step .step-head {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding: 14px 20px;
+  background: var(--panel-2);
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+.step .step-idx {
+  font-family: 'Fraunces', Georgia, serif;
+  color: var(--periwinkle);
+  font-weight: 600;
+  font-size: 15px;
+}
+.step .step-title { color: var(--muted); font-size: 13px; word-break: break-all; }
+.step .step-body {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 0;
+}
+@media (max-width: 700px) { .step .step-body { grid-template-columns: 1fr; } }
+.step pre.snapshot {
+  margin: 0;
+  padding: 16px 20px;
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  font-size: 12px;
+  color: #c7cbe0;
+  max-height: 220px;
+  overflow: auto;
+  white-space: pre-wrap;
+  border-right: 1px solid var(--border);
+}
+.step .step-meta { padding: 16px 20px; }
+.action-pill {
+  display: inline-block;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: rgba(140, 158, 255, 0.15);
+  color: var(--periwinkle);
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+.action-pill.error { background: rgba(255, 139, 139, 0.15); color: var(--bad); }
+.token-line { font-size: 12px; color: var(--muted); margin-top: 8px; }
+.token-line b.snap { color: var(--periwinkle); }
+.token-line b.raw { color: var(--shadow-red); }
+
+.payoff {
+  margin-top: 56px;
+  padding: 32px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+}
+.payoff .row { display: flex; align-items: baseline; gap: 40px; flex-wrap: wrap; }
+.payoff .stat .label { color: var(--muted); font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; }
+.payoff .stat .value {
+  font-family: 'Fraunces', Georgia, serif;
+  font-size: 56px;
+  font-weight: 600;
+  color: var(--good);
+}
+.payoff .stat .value.warn { color: var(--bad); }
+
+.bench-placeholder {
+  color: var(--muted);
+  font-size: 14px;
+  border: 1px dashed var(--border);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin-top: 16px;
+}
+
+.bars { margin-top: 24px; }
+.bar-row { margin-bottom: 14px; }
+.bar-row .bar-label {
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 4px;
+  display: flex;
+  justify-content: space-between;
+}
+.bar-track { position: relative; height: 20px; background: var(--panel-2); border-radius: 6px; overflow: hidden; }
+.bar-fill { position: absolute; top: 0; left: 0; height: 100%; border-radius: 6px; }
+.bar-fill.raw { background: var(--shadow-red); opacity: 0.55; }
+.bar-fill.snapshot { background: var(--periwinkle); }
+
+footer { margin-top: 56px; color: var(--muted); font-size: 12px; text-align: center; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="hero">
+    <p class="brand">barebrowse</p>
+    <h1>An agent that never saw the HTML.</h1>
+    <p class="desc">Search Wikipedia for the creator of the Python programming language, follow the correct search-result link, and extract his birth date.</p>
+  </header>
+
+  <div class="counters">
+    <div class="counter-card snapshot">
+      <div class="label">tokens the agent actually saw</div>
+      <div class="num" data-countup="31008">0</div>
+    </div>
+    <div class="counter-card raw">
+      <div class="label">raw HTML equivalent (shadow counter)</div>
+      <div class="num" data-countup="299778">0</div>
+    </div>
+  </div>
+
+  <h2 class="section">Step-by-step transcript</h2>
+  
+<div class="step">
+  <div class="step-head">
+    <span class="step-idx">step 0</span>
+    <span class="step-title">Wikipedia, the free encyclopedia — https://en.wikipedia.org/wiki/Main_Page</span>
+  </div>
+  <div class="step-body">
+    <pre class="snapshot">document &quot;Wikipedia, the free encyclopedia&quot;
+link[e1] &quot;Jump to content&quot;
+banner
+  navigation &quot;Site&quot;
+    checkbox[e2] &quot;Main menu&quot;
+    label &quot;Main menu&quot;
+    button[e3] &quot;move to sidebar&quot;
+    button[e4] &quot;hide&quot;
+    list
+      listitem &quot;Main page&quot;
+        link[e5] &quot;Main page&quot;
+      listitem &quot;Contents&quot;
+        link[e6] &quot;Contents&quot;
+      listitem &quot;Current events&quot;
+        link[e7] &quot;Current events&quot;
+      listitem &quot;Random article&quot;
+        link[e8] &quot;Random article&quot;
+      listitem &quot;About Wikipedia&quot;
+        link[e9] &quot;About Wikipedia&quot;
+      listitem &quot;Contact us&quot;
+        link[e10] &quot;Contact us&quot;
+    list
+      listitem &quot;Help&quot;
+        link[e11] &quot;Help&quot;
+      listitem &quot;Learn to edit&quot;
+        link[e12] &quot;Learn to edit&quot;
+      listitem &quot;Community portal&quot;
+        link[e13] &quot;Community portal&quot;
+      listitem &quot;Recent changes&quot;
+        link[e14] &quot;Recent changes&quot;
+      listitem &quot;Upload file&quot;
+        link[e15] &quot;Upload file&quot;
+      listitem &quot;Special pages&quot;
+        link[e16] &quot;Special pages&quot;
+  link[e17]
+  search
+    link[e18] &quot;Search&quot;
+    form
+      textbox[e19] &quot;Search Wikipedia&quot;
+      button[e20] &quot;Search&quot;
+  navigation &quot;Personal tools&quot;
+    navigation &quot;Appearance&quot;
+      checkbox[e21] &quot;Appearance&quot;
+      label &quot;Appearance&quot;
+    list
+      listitem &quot;Donate&quot;
+        link[e22] &quot;Donate&quot;
+      listitem &quot;Create account&quot;
+        link[e23] &quot;Create account&quot;
+      listitem &quot;Log in&quot;
+        link[e24] &quot;Log in&quot;
+    checkbox[e25] &quot;Personal tools&quot;
+    label &quot;Personal tools&quot;
+    list
+      listitem &quot;Donate&quot;
+        link[e26] &quot;Donate&quot;
+      listitem &quot;Create account&quot;
+        link[e27] &quot;Create account&quot;
+      listitem &quot;Log in&quot;
+        link[e28] &quot;Log in&quot;
+navigation &quot;Site&quot;
+main
+  banner
+    heading &quot;Main Page&quot;
+  navigation &quot;Namespaces&quot;
+    list
+      listitem &quot;Main Page&quot;
+        link[e29] &quot;Main Page&quot;
+      listitem &quot;Talk&quot;
+        link[e30] &quot;Talk&quot;
+    checkbox[e31] &quot;Change language variant&quot;
+    label &quot;English&quot;
+  navigation &quot;Views&quot;
+    list
+      listitem &quot;Read&quot;
+        link[e32] &quot;Read&quot;
+      listitem &quot;View source&quot;
+        link[e33] &quot;View source&quot;
+      listitem &quot;View history&quot;
+        link[e34] &quot;View history&quot;
+  navigation &quot;Page tools&quot;
+    checkbox[e35] &quot;Tools&quot;
+    label &quot;Tools&quot;
+    button[e36] &quot;move to sidebar&quot;
+    button[e37] &quot;hide&quot;
+    list
+      listitem &quot;Read&quot;
+        link[e38] &quot;Read&quot;
+      listitem &quot;View source&quot;
+        link[e39] &quot;View source&quot;
+      listitem &quot;View history&quot;
+        link[e40] &quot;View history&quot;
+    list
+      listitem &quot;What links here&quot;
+        link[e41] &quot;What links here&quot;
+      listitem &quot;Related changes&quot;
+        link[e42] &quot;Related changes&quot;
+      listitem &quot;Upload file&quot;
+        link[e43] &quot;Upload file&quot;
+      listitem &quot;Permanent link&quot;
+        link[e44] &quot;Permanent link&quot;
+      listitem &quot;Page information&quot;
+        link[e45] &quot;Page information&quot;
+      listitem &quot;Cite this page&quot;
+        link[e46] &quot;Cite this page&quot;
+      listitem &quot;Get shortened URL&quot;
+        link[e47] &quot;Get shortened URL&quot;
+      listitem &quot;Switch to legacy parser&quot;
+        link[e48] &quot;Switch to legacy parser&quot;
+    list
+      listitem &quot;Download as PDF&quot;
+        link[e49] &quot;Download as PDF&quot;
+      listitem &quot;Printable version&quot;
+        link[e50] &quot;Printable version&quot;
+    list
+      listitem &quot;Abstract Wikipedia&quot;
+        link[e51] &quot;Abstract Wikipedia&quot;
+      listitem &quot;Wikimedia Commons&quot;
+        link[e52] &quot;Wikimedia Commons&quot;
+      listitem &quot;Wikimedia Foundation&quot;
+        link[e53] &quot;Wikimedia Foundation&quot;
+      listitem &quot;MediaWiki&quot;
+        link[e54] &quot;MediaWiki&quot;
+      listitem &quot;Meta-Wiki&quot;
+        link[e55] &quot;Meta-Wiki&quot;
+      listitem &quot;Wikimedia Outreach&quot;
+        link[e56] &quot;Wikimedia Outreach&quot;
+      listitem &quot;Multilingual Wikisource&quot;
+        link[e57] &quot;Multilingual Wikisource&quot;
+      listitem &quot;Wikispecies&quot;
+        link[e58] &quot;Wikispecies&quot;
+      listitem &quot;Wikibooks&quot;
+        link[e59] &quot;Wikibooks&quot;
+      listitem &quot;Wikidata&quot;
+        link[e60] &quot;Wikidata&quot;
+      listitem &quot;Wikifunctions&quot;
+        link[e61] &quot;Wikifunctions&quot;
+      listitem &quot;Wikimania&quot;
+        link[e62] &quot;Wikimania&quot;
+      listitem &quot;Wikinews&quot;
+        link[e63] &quot;Wikinews&quot;
+      listitem &quot;Wikiquote&quot;
+        link[e64] &quot;Wikiquote&quot;
+      listitem &quot;Wikisource&quot;
+        link[e65] &quot;Wikisource&quot;
+      listitem &quot;Wikiversity&quot;
+        link[e66] &quot;Wikiversity&quot;
+      listitem &quot;Wikivoyage&quot;
+        link[e67] &quot;Wikivoyage&quot;
+      listitem &quot;Wiktionary&quot;
+        link[e68] &quot;Wiktionary&quot;
+      listitem &quot;Wikidata item&quot;
+        link[e69] &quot;Wikidata item&quot;
+  navigation &quot;Page tools&quot;
+  navigation &quot;Appearance&quot;
+    button[e70] &quot;move to sidebar&quot;
+    button[e71] &quot;hide&quot;
+  region
+    heading &quot;Welcome to Wikipedia&quot;
+      link[e72] &quot;Wikipedia&quot;
+    link[e73] &quot;free&quot;
+    link[e74] &quot;anyone can edit&quot;
+    list
+      listitem &quot;249,387 active editors&quot;
+        link[e75] &quot;249,387&quot;
+      listitem &quot;7,208,177 articles in English&quot;
+        link[e76] &quot;7,208,177&quot;
+        link[e77] &quot;English&quot;
+    heading &quot;From today&#x27;s featured article&quot;
+    link[e78]
+    paragraph &quot;The Manufacturers Trust Company Building is a commercial building in Midtown Manhattan , New York City. Opened in 1954, it was the first bank building in the United States to be built in the International Style . It was commissioned by the Manufacturers Trust Company and designed by Skidmore, Owing…&quot;
+      link[e79] &quot;Manufacturers Trust Company Building&quot;
+      link[e80] &quot;Midtown Manhattan&quot;
+      link[e81] &quot;International Style&quot;
+      link[e82] &quot;Manufacturers Trust Company&quot;
+      link[e83] &quot;Skidmore, Owings &amp; Merrill&quot;
+      link[e84] &quot;façade&quot;
+      link[e85] &quot;mullions&quot;
+      link[e86] &quot;Chase Bank&quot;
+      link[e87] &quot;New York City Landmarks Preservation Commission&quot;
+      link[e88] &quot;Full article...&quot;
+    list
+      listitem &quot;History of Liverpool F.C. (1985–present)&quot;
+        link[e89] &quot;History of Liverpool F.C. (1985–present)&quot;
+      listitem &quot;Meurig ab Arthfael&quot;
+        link[e90] &quot;Meurig ab Arthfael&quot;
+      listitem &quot;Gu Yanwu&quot;
+        link[e91] &quot;Gu Yanwu&quot;
+    list
+      listitem &quot;Archive&quot;
+        link[e92] &quot;Archive&quot;
+      listitem &quot;By email&quot;
+        link[e93] &quot;By email&quot;
+      listitem &quot;More featured articles&quot;
+        link[e94] &quot;More featured articles&quot;
+      listitem &quot;About&quot;
+        link[e95] &quot;About&quot;
+    heading &quot;Did you know ...&quot;
+    link[e96]
+    list
+      listitem &quot;... that the tortilla (examples pictured) has been eaten for thousands of years , but it has only been considered a national symbol of Mexico since the 20th century?&quot;
+        link[e97] &quot;tortilla&quot;
+        link[e98] &quot;has been eaten for thousands of years&quot;
+      listitem &quot;... that magician Sterling Dietz used $1,200 in prize earnings from a chess tournament to pay for tuition at a Las Vegas magic school?&quot;
+        link[e99] &quot;Sterling Dietz&quot;
+      listitem &quot;... that permanent human settlements emerged independently in multiple regions approximately 5,000 to 10,000 years ago?&quot;
+        link[e100] &quot;human settlements&quot;
+      listitem &quot;... that a transgender-owned bookshop in Leeds ran a fundraiser in which people paid to deface pages of Harry Potter and the Chamber of Secrets ?&quot;
+        link[e101] &quot;a transgender-owned bookshop in Leeds&quot;
+        link[e102] &quot;Harry Potter and the Chamber of Secrets&quot;
+      listitem &quot;... that the fossil redwood Metasequoia milleri was described from its pollen cones?&quot;
+        link[e103] &quot;Metasequoia milleri&quot;
+      listitem &quot;... that four people and three hundred sheep died after sixteen carriages broke off a mixed-use train and collided with a goods train in Bathurst ?&quot;
+        link[e104] &quot;sixteen carriages broke off a mixed-use train and collided with a goods train&quot;
+        link[e105] &quot;Bathurst&quot;
+      listitem &quot;... that the Princedom of Zhou , unlike most other Ming princedoms, developed a strong tradition of cultural and literary learning?&quot;
+        link[e106] &quot;Princedom of Zhou&quot;
+      listitem &quot;... that practical normativity covers what people should do, while theoretical normativity is about what to believe?&quot;
+        link[e107] &quot;normativity&quot;
+      listitem &quot;... that the first volume of a yuri manga was criticized for not having enough yuri ?&quot;
+        link[e108] &quot;a yuri manga&quot;
+        link[e109] &quot;yuri&quot;
+    list
+      listitem &quot;Archive&quot;
+        link[e110] &quot;Archive&quot;
+      listitem &quot;Start a new article&quot;
+        link[e111] &quot;Start a new article&quot;
+      listitem &quot;Nominate an article&quot;
+        link[e112] &quot;Nominate an article&quot;
+    heading &quot;In the news&quot;
+    figure &quot;Beth Mooney&quot;
+      link[e113]
+    list
+      listitem &quot;Thirteen people are killed and twenty-three others are reported missing in a wildfire in Los Gallardos , Spain.&quot;
+        link[e114] &quot;a wildfire&quot;
+        link[e115] &quot;Los Gallardos&quot;
+      listitem &quot;A series of coordinated attacks across Pakistan&#x27;s Balochistan province leaves at least forty-two people dead.&quot;
+        link[e116] &quot;A series of coordinated attacks&quot;
+        link[e117] &quot;Balochistan&quot;
+      listitem &quot;The IOC provisionally lifts its suspension of the Russian Olympic Committee .&quot;
+        link[e118] &quot;IOC&quot;
+        link[e119] &quot;Russian Olympic Committee&quot;
+      listitem &quot;In cricket, the Women&#x27;s T20 World Cup concludes with Australia defeating England in the final (player of the match Beth Mooney pictured) .&quot;
+        link[e120] &quot;the Women&#x27;s T20 World Cup&quot;
+        link[e121] &quot;Australia&quot;
+        link[e122] &quot;England&quot;
+        link[e123] &quot;the final&quot;
+        link[e124] &quot;Beth Mooney&quot;
+    list
+      listitem &quot;Ebola epidemic&quot;
+        link[e125] &quot;Ebola epidemic&quot;
+      listitem &quot;FIFA World Cup&quot;
+        link[e126] &quot;FIFA World Cup&quot;
+      listitem &quot;Flamingo Revolution&quot;
+        link[e127] &quot;Flamingo Revolution&quot;
+      listitem &quot;Iran war ( Lebanon war )&quot;
+        link[e128] &quot;Iran war&quot;
+        link[e129] &quot;Lebanon war&quot;
+      listitem &quot;Russo-Ukrainian war timeline&quot;
+        link[e130] &quot;Russo-Ukrainian war&quot;
+        list
+          listitem &quot;timeline&quot;
+            link[e131] &quot;timeline&quot;
+    link[e132] &quot;Recent deaths&quot;
+    list
+      listitem &quot;Lauren Bennett&quot;
+        link[e133] &quot;Lauren Bennett&quot;
+      listitem &quot;Ann Widdecombe&quot;
+        link[e134] &quot;Ann Widdecombe&quot;
+      listitem &quot;Sharon Dede Padi&quot;
+        link[e135] &quot;Sharon Dede Padi&quot;
+      listitem &quot;Carmelo Cedrún&quot;
+        link[e136] &quot;Carmelo Cedrún&quot;
+      listitem &quot;Benedito Ruy Barbosa&quot;
+        link[e137] &quot;Benedito Ruy Barbosa&quot;
+      listitem &quot;Bonnie Tyler&quot;
+        link[e138] &quot;Bonnie Tyler&quot;
+    list
+      listitem &quot;More current events&quot;
+        link[e139] &quot;More current events&quot;
+      listitem &quot;Nominate an article&quot;
+        link[e140] &quot;Nominate an article&quot;
+    heading &quot;On this day&quot;
+    paragraph &quot;July 13 : Kashmir Martyrs&#x27; Day in Pakistan&quot;
+      link[e141] &quot;July 13&quot;
+      link[e142] &quot;Kashmir Martyrs&#x27; Day&quot;
+    link[e143]
+    list
+      listitem &quot;1643 – English Civil War : Royalist forces defeated the Parliamentarians at the Battle of Roundway Down near Devizes , Wiltshire.&quot;
+        link[e144] &quot;1643&quot;
+        link[e145] &quot;English Civil War&quot;
+        link[e146] &quot;Royalist&quot;
+        link[e147] &quot;Parliamentarians&quot;
+        link[e148] &quot;Battle of Roundway Down&quot;
+        link[e149] &quot;Devizes&quot;
+      listitem &quot;1794 – The Battle of Trippstadt between French forces and those of Prussia and Austria began.&quot;
+        link[e150] &quot;1794&quot;
+        link[e151] &quot;Battle of Trippstadt&quot;
+        link[e152] &quot;Prussia&quot;
+      listitem &quot;1831 – Wallachian officials adopted the Regulamentul Organic , which engendered a period of reforms that provided for the westernization of the local society.&quot;
+        link[e153] &quot;1831&quot;
+        link[e154] &quot;Wallachian&quot;
+        link[e155] &quot;Regulamentul Organic&quot;
+      listitem &quot;1962 – In an unprecedented reshuffle , British prime minister Harold Macmillan dismissed seven members of his cabinet .&quot;
+        link[e156] &quot;1962&quot;
+        link[e157] &quot;reshuffle&quot;
+        link[e158] &quot;Harold Macmillan&quot;
+        link[e159] &quot;dismissed seven members of his cabinet&quot;
+      listitem &quot;1999 – William Chaney (pictured) , a historian of Anglo-Saxon England , retired after a half a century at Lawrence University , by which time 80% of living alumni had attended the school during his tenure.&quot;
+        link[e160] &quot;1999&quot;
+        link[e161] &quot;William Chaney&quot;
+        link[e162] &quot;Anglo-Saxon England&quot;
+        link[e163] &quot;Lawrence University&quot;
+    list
+      listitem &quot;Afonso, Hereditary Prince of Portugal ( d. 1491)&quot;
+        link[e164] &quot;Afonso, Hereditary Prince of Portugal&quot;
+      listitem &quot;Kate Sheppard ( d. 1934)&quot;
+        link[e165] &quot;Kate Sheppard&quot;
+      listitem &quot;Ernő Rubik ( b. 1944)&quot;
+        link[e166] &quot;Ernő Rubik&quot;
+      listitem &quot;Ken Jeong ( b. 1969)&quot;
+        link[e167] &quot;Ken Jeong&quot;
+    list
+      listitem &quot;July 12&quot;
+        link[e168] &quot;July 12&quot;
+      listitem &quot;July 13&quot;
+        link[e169] &quot;July 13&quot;
+      listitem &quot;July 14&quot;
+        link[e170] &quot;July 14&quot;
+    list
+      listitem &quot;Archive&quot;
+        link[e171] &quot;Archive&quot;
+      listitem &quot;By email&quot;
+        link[e172] &quot;By email&quot;
+      listitem &quot;List of days of the year&quot;
+        link[e173] &quot;List of days of the year&quot;
+      listitem &quot;About&quot;
+        link[e174] &quot;About&quot;
+    heading &quot;From today&#x27;s featured list&quot;
+    link[e175]
+    paragraph &quot;The Ming dynasty continued the use of era names , a system introduced by Emperor Wu of Han in 114 BC, or more formally in 110 BC. A Chinese era name , or &quot;reign motto&quot;, was chosen at the beginning of an emperor&#x27;s reign to reflect the political, economic, or social conditions of the time. During the…&quot;
+      link[e176] &quot;The Ming dynasty continued the use of era names&quot;
+      link[e177] &quot;Emperor Wu of Han&quot;
+      link[e178] &quot;Chinese era name&quot;
+      link[e179] &quot;Ming dynasty&quot;
+      link[e180] &quot;Emperor Yingzong&quot;
+      link[e181] &quot;Hongwu&quot;
+      link[e182] &quot;Hongwu Emperor&quot;
+      link[e183] &quot;Chongzhen Emperor&quot;
+      link[e184] &quot;fall of Beijing&quot;
+      link[e185] &quot;Wanli&quot;
+      link[e186] &quot;Full list...&quot;
+    list
+      listitem &quot;Malcolm in the Middle episodes&quot;
+        link[e187] &quot;Malcolm in the Middle episodes&quot;
+      listitem &quot;Grammy Award for Best Rap Album&quot;
+        link[e188] &quot;Grammy Award for Best Rap Album&quot;
+      listitem &quot;Inventoried hardwoods in the United States&quot;
+        link[e189] &quot;Inventoried hardwoods in the United States&quot;
+    list
+      listitem &quot;Archive&quot;
+        link[e190] &quot;Archive&quot;
+      listitem &quot;More featured lists&quot;
+        link[e191] &quot;More featured lists&quot;
+    heading &quot;Today&#x27;s featured picture&quot;
+    presentation &quot;The Great Mosque of Central Java is a mosque in Semarang , the capital and largest city of the Indonesian province of Central Java . Dedicated in 2006, the mosque complex covers 10 hectares (25 acres). Up to 15,000 worshippers can be accommodated in the mosque and the central courtyard. This aerial…&quot;
+      row &quot;The Great Mosque of Central Java is a mosque in Semarang , the capital and largest city of the Indonesian province of Central Java . Dedicated in 2006, the mosque complex covers 10 hectares (25 acres). Up to 15,000 worshippers can be accommodated in the mosque and the central courtyard. This aerial…&quot;
+        cell
+          link[e192]
+        cell &quot;The Great Mosque of Central Java is a mosque in Semarang , the capital and largest city of the Indonesian province of Central Java . Dedicated in 2006, the mosque complex covers 10 hectares (25 acres). Up to 15,000 worshippers can be accommodated in the mosque and the central courtyard. This aerial…&quot;
+          paragraph &quot;The Great Mosque of Central Java is a mosque in Semarang , the capital and largest city of the Indonesian province of Central Java . Dedicated in 2006, the mosque complex covers 10 hectares (25 acres). Up to 15,000 worshippers can be accommodated in the mosque and the central courtyard. This aerial…&quot;
+            link[e193] &quot;Great Mosque of Central Java&quot;
+            link[e194] &quot;Semarang&quot;
+            link[e195] &quot;Central Java&quot;
+            link[e196] &quot;dakwah&quot;
+          paragraph &quot;Photograph credit: Chris Woodrich&quot;
+            link[e197] &quot;Chris Woodrich&quot;
+          list
+            listitem &quot;Maroon shining parrot&quot;
+              link[e198] &quot;Maroon shining parrot&quot;
+            listitem &quot;Arthur Tedder, 1st Baron Tedder&quot;
+              link[e199] &quot;Arthur Tedder, 1st Baron Tedder&quot;
+            listitem &quot;Pennsylvania&quot;
+              link[e200] &quot;Pennsylvania&quot;
+          list
+            listitem &quot;Archive&quot;
+              link[e201] &quot;Archive&quot;
+            listitem &quot;More featured pictures&quot;
+              link[e202] &quot;More featured pictures&quot;
+    heading &quot;Other areas of Wikipedia&quot;
+    list
+      listitem &quot;Community portal – The central hub for editors, with resources, links, tasks, and announcements.&quot;
+        link[e203] &quot;Community portal&quot;
+      listitem &quot;Village pump – Forum for discussions about Wikipedia itself, including policies and technical issues.&quot;
+        link[e204] &quot;Village pump&quot;
+      listitem &quot;Site news – Sources of news about Wikipedia and the broader Wikimedia movement.&quot;
+        link[e205] &quot;Site news&quot;
+      listitem &quot;Teahouse – Ask basic questions about using or editing Wikipedia.&quot;
+        link[e206] &quot;Teahouse&quot;
+      listitem &quot;Help desk – Ask questions about using or editing Wikipedia.&quot;
+        link[e207] &quot;Help desk&quot;
+      listitem &quot;Reference desk – Ask research questions about encyclopedic topics.&quot;
+        link[e208] &quot;Reference desk&quot;
+      listitem &quot;Content portals – A unique way to navigate the encyclopedia.&quot;
+        link[e209] &quot;Content portals&quot;
+    heading &quot;Wikipedia&#x27;s sister projects&quot;
+    paragraph &quot;Wikipedia is written by volunteer editors and hosted by the Wikimedia Foundation , a non-profit organization that also hosts a range of other volunteer projects :&quot;
+      link[e210] &quot;Wikimedia Foundation&quot;
+      link[e211] &quot;projects&quot;
+    list
+      listitem &quot;Commons Free media repository&quot;
+        link[e212]
+        link[e213] &quot;Commons&quot;
+      listitem &quot;MediaWiki Wiki software development&quot;
+        link[e214]
+        link[e215] &quot;MediaWiki&quot;
+      listitem &quot;Meta-Wiki Wikimedia project coordination&quot;
+        img
+        link[e216] &quot;Meta-Wiki&quot;
+      listitem &quot;Wikibooks Free textbooks and manuals&quot;
+        link[e217]
+        link[e218] &quot;Wikibooks&quot;
+      listitem &quot;Wikidata Free knowledge base&quot;
+        img
+        link[e219] &quot;Wikidata&quot;
+      listitem &quot;Wikifunctions Catalog of computer functions&quot;
+        link[e220]
+        link[e221] &quot;Wikifunctions&quot;
+      listitem &quot;Wikiquote Collection of quotations&quot;
+        img
+        link[e222] &quot;Wikiquote&quot;
+      listitem &quot;Wikisource Free-content library&quot;
+        link[e223]
+        link[e224] &quot;Wikisource&quot;
+      listitem &quot;Wikispecies Directory of species&quot;
+        link[e225]
+        link[e226] &quot;Wikispecies&quot;
+      listitem &quot;Wikiversity Free learning tools&quot;
+        link[e227]
+        link[e228] &quot;Wikiversity&quot;
+      listitem &quot;Wikivoyage Free travel guide&quot;
+        link[e229]
+        link[e230] &quot;Wikivoyage&quot;
+      listitem &quot;Wiktionary Dictionary and thesaurus&quot;
+        link[e231]
+        link[e232] &quot;Wiktionary&quot;
+    heading &quot;Wikipedia languages&quot;
+    paragraph &quot;This Wikipedia is written in English . Many other Wikipedias are available ; some of the largest are listed below.&quot;
+      link[e233] &quot;English&quot;
+      link[e234] &quot;other Wikipedias are available&quot;
+    list
+      listitem &quot;1,000,000+ articles العربية Deutsch Español فارسی ‎ Français Italiano Nederlands 日本語 Polski Português Русский Svenska Українська Tiếng Việt 中文&quot;
+        heading &quot;1,000,000+ articles&quot;
+        list
+          listitem &quot;العربية&quot;
+            link[e235] &quot;العربية&quot;
+          listitem &quot;Deutsch&quot;
+            link[e236] &quot;Deutsch&quot;
+          listitem &quot;Español&quot;
+            link[e237] &quot;Español&quot;
+          listitem &quot;فارسی ‎&quot;
+            link[e238] &quot;فارسی&quot;
+          listitem &quot;Français&quot;
+            link[e239] &quot;Français&quot;
+          listitem &quot;Italiano&quot;
+            link[e240] &quot;Italiano&quot;
+          listitem &quot;Nederlands&quot;
+            link[e241] &quot;Nederlands&quot;
+          listitem &quot;日本語&quot;
+            link[e242] &quot;日本語&quot;
+          listitem &quot;Polski&quot;
+            link[e243] &quot;Polski&quot;
+          listitem &quot;Português&quot;
+            link[e244] &quot;Português&quot;
+          listitem &quot;Русский&quot;
+            link[e245] &quot;Русский&quot;
+          listitem &quot;Svenska&quot;
+            link[e246] &quot;Svenska&quot;
+          listitem &quot;Українська&quot;
+            link[e247] &quot;Українська&quot;
+          listitem &quot;Tiếng Việt&quot;
+            link[e248] &quot;Tiếng Việt&quot;
+          listitem &quot;中文&quot;
+            link[e249] &quot;中文&quot;
+      listitem &quot;250,000+ articles Bahasa Indonesia Bahasa Melayu Bân-lâm-gú Български Català Čeština Dansk Eesti Ελληνικά Esperanto Euskara עברית Հայերեն 한국어 Magyar Norsk bokmål Română Simple English Slovenčina Srpski Srpskohrvatski Suomi Türkçe Oʻzbekcha&quot;
+        heading &quot;250,000+ articles&quot;
+        list
+          listitem &quot;Bahasa Indonesia&quot;
+            link[e250] &quot;Bahasa Indonesia&quot;
+          listitem &quot;Bahasa Melayu&quot;
+            link[e251] &quot;Bahasa Melayu&quot;
+          listitem &quot;Bân-lâm-gú&quot;
+            link[e252] &quot;Bân-lâm-gú&quot;
+          listitem &quot;Български&quot;
+            link[e253] &quot;Български&quot;
+          listitem &quot;Català&quot;
+            link[e254] &quot;Català&quot;
+          listitem &quot;Čeština&quot;
+            link[e255] &quot;Čeština&quot;
+          listitem &quot;Dansk&quot;
+            link[e256] &quot;Dansk&quot;
+          listitem &quot;Eesti&quot;
+            link[e257] &quot;Eesti&quot;
+          listitem &quot;Ελληνικά&quot;
+            link[e258] &quot;Ελληνικά&quot;
+          listitem &quot;Esperanto&quot;
+            link[e259] &quot;Esperanto&quot;
+          listitem &quot;Euskara&quot;
+            link[e260] &quot;Euskara&quot;
+          listitem &quot;עברית&quot;
+            link[e261] &quot;עברית&quot;
+          listitem &quot;Հայերեն&quot;
+            link[e262] &quot;Հայերեն&quot;
+          listitem &quot;한국어&quot;
+            link[e263] &quot;한국어&quot;
+          listitem &quot;Magyar&quot;
+            link[e264] &quot;Magyar&quot;
+          listitem &quot;Norsk bokmål&quot;
+            link[e265] &quot;Norsk bokmål&quot;
+          listitem &quot;Română&quot;
+            link[e266] &quot;Română&quot;
+          listitem &quot;Simple English&quot;
+            link[e267] &quot;Simple English&quot;
+          listitem &quot;Slovenčina&quot;
+            link[e268] &quot;Slovenčina&quot;
+          listitem &quot;Srpski&quot;
+            link[e269] &quot;Srpski&quot;
+          listitem &quot;Srpskohrvatski&quot;
+            link[e270] &quot;Srpskohrvatski&quot;
+          listitem &quot;Suomi&quot;
+            link[e271] &quot;Suomi&quot;
+          listitem &quot;Türkçe&quot;
+            link[e272] &quot;Türkçe&quot;
+          listitem &quot;Oʻzbekcha&quot;
+            link[e273] &quot;Oʻzbekcha&quot;
+      listitem &quot;50,000+ articles Asturianu Azərbaycanca বাংলা Bosanski کوردی Frysk Gaeilge Galego Hrvatski ქართული Kurdî Latviešu Lietuvių മലയാളം Македонски မြန်မာဘာသာ Norsk nynorsk ਪੰਜਾਬੀ Shqip Slovenščina ไทย తెలుగు اردو&quot;
+        heading &quot;50,000+ articles&quot;
+        list
+          listitem &quot;Asturianu&quot;
+            link[e274] &quot;Asturianu&quot;
+          listitem &quot;Azərbaycanca&quot;
+            link[e275] &quot;Azərbaycanca&quot;
+          listitem &quot;বাংলা&quot;
+            link[e276] &quot;বাংলা&quot;
+          listitem &quot;Bosanski&quot;
+            link[e277] &quot;Bosanski&quot;
+          listitem &quot;کوردی&quot;
+            link[e278] &quot;کوردی&quot;
+          listitem &quot;Frysk&quot;
+            link[e279] &quot;Frysk&quot;
+          listitem &quot;Gaeilge&quot;
+            link[e280] &quot;Gaeilge&quot;
+          listitem &quot;Galego&quot;
+            link[e281] &quot;Galego&quot;
+          listitem &quot;Hrvatski&quot;
+            link[e282] &quot;Hrvatski&quot;
+          listitem &quot;ქართული&quot;
+            link[e283] &quot;ქართული&quot;
+          listitem &quot;Kurdî&quot;
+            link[e284] &quot;Kurdî&quot;
+          listitem &quot;Latviešu&quot;
+            link[e285] &quot;Latviešu&quot;
+          listitem &quot;Lietuvių&quot;
+            link[e286] &quot;Lietuvių&quot;
+          listitem &quot;മലയാളം&quot;
+            link[e287] &quot;മലയാളം&quot;
+          listitem &quot;Македонски&quot;
+            link[e288] &quot;Македонски&quot;
+          listitem &quot;မြန်မာဘာသာ&quot;
+            link[e289] &quot;မြန်မာဘာသာ&quot;
+          listitem &quot;Norsk nynorsk&quot;
+            link[e290] &quot;Norsk nynorsk&quot;
+          listitem &quot;ਪੰਜਾਬੀ&quot;
+            link[e291] &quot;ਪੰਜਾਬੀ&quot;
+          listitem &quot;Shqip&quot;
+            link[e292] &quot;Shqip&quot;
+          listitem &quot;Slovenščina&quot;
+            link[e293] &quot;Slovenščina&quot;
+          listitem &quot;ไทย&quot;
+            link[e294] &quot;ไทย&quot;
+          listitem &quot;తెలుగు&quot;
+            link[e295] &quot;తెలుగు&quot;
+          listitem &quot;اردو&quot;
+            link[e296] &quot;اردو&quot;
+  link[e297] &quot;https://en.wikipedia.org/w/index.php?title=Main_Page&amp;oldid=1358980925&quot;
+  checkbox[e298] &quot;346 languages&quot;
+  label &quot;346 languages&quot;
+  list
+    listitem &quot;Аԥсшәа&quot;
+      link[e299] &quot;Аԥсшәа&quot;
+    listitem &quot;Acèh&quot;
+      link[e300] &quot;Acèh&quot;
+    listitem &quot;Адыгабзэ&quot;
+      link[e301] &quot;Адыгабзэ&quot;
+    listitem &quot;Afrikaans&quot;
+      link[e302] &quot;Afrikaans&quot;
+    listitem &quot;Alemannisch&quot;
+      link[e303] &quot;Alemannisch&quot;
+    listitem &quot;Алтай тил&quot;
+      link[e304] &quot;Алтай тил&quot;
+    listitem &quot;አማርኛ&quot;
+      link[e305] &quot;አማርኛ&quot;
+    listitem &quot;Pangcah&quot;
+      link[e306] &quot;Pangcah&quot;
+    listitem &quot;Aragonés&quot;
+      link[e307] &quot;Aragonés&quot;
+    listitem &quot;Ænglisc&quot;
+      link[e308] &quot;Ænglisc&quot;
+    listitem &quot;Obolo&quot;
+      link[e309] &quot;Obolo&quot;
+    listitem &quot;अंगिका&quot;
+      link[e310] &quot;अंगिका&quot;
+    listitem &quot;العربية&quot;
+      link[e311] &quot;العربية&quot;
+    listitem &quot;ܐܪܡܝܐ&quot;
+      link[e312] &quot;ܐܪܡܝܐ&quot;
+    listitem &quot;الدارجة&quot;
+      link[e313] &quot;الدارجة&quot;
+    listitem &quot;مصرى&quot;
+      link[e314] &quot;مصرى&quot;
+    listitem &quot;অসমীয়া&quot;
+      link[e315] &quot;অসমীয়া&quot;
+    listitem &quot;Asturianu&quot;
+      link[e316] &quot;Asturianu&quot;
+    listitem &quot;Atikamekw&quot;
+      link[e317] &quot;Atikamekw&quot;
+    listitem &quot;Авар&quot;
+      link[e318] &quot;Авар&quot;
+    listitem &quot;Kotava&quot;
+      link[e319] &quot;Kotava&quot;
+    listitem &quot;अवधी&quot;
+      link[e320] &quot;अवधी&quot;
+    listitem &quot;Aymar aru&quot;
+      link[e321] &quot;Aymar aru&quot;
+    listitem &quot;Azərbaycanca&quot;
+      link[e322] &quot;Azərbaycanca&quot;
+    listitem &quot;تۆرکجه&quot;
+      link[e323] &quot;تۆرکجه&quot;
+    listitem &quot;Башҡортса&quot;
+      link[e324] &quot;Башҡортса&quot;
+    listitem &quot;Basa Bali&quot;
+      link[e325] &quot;Basa Bali&quot;
+    listitem &quot;Boarisch&quot;
+      link[e326] &quot;Boarisch&quot;
+    listitem &quot;Žemaitėška&quot;
+      link[e327] &quot;Žemaitėška&quot;
+    listitem &quot;Batak Toba&quot;
+      link[e328] &quot;Batak Toba&quot;
+    listitem &quot;Bikol Central&quot;
+      link[e329] &quot;Bikol Central&quot;
+    listitem &quot;Bajau Sama&quot;
+      link[e330] &quot;Bajau Sama&quot;
+    listitem &quot;Беларуская (тарашкевіца)&quot;
+      link[e331] &quot;Беларуская (тарашкевіца)&quot;
+    listitem &quot;Беларуская&quot;
+      link[e332] &quot;Беларуская&quot;
+    listitem &quot;Betawi&quot;
+      link[e333] &quot;Betawi&quot;
+    listitem &quot;Български&quot;
+      link[e334] &quot;Български&quot;
+    listitem &quot;भोजपुरी&quot;
+      link[e335] &quot;भोजपुरी&quot;
+    listitem &quot;Bislama&quot;
+      link[e336] &quot;Bislama&quot;
+    listitem &quot;Banjar&quot;
+      link[e337] &quot;Banjar&quot;
+    listitem &quot;ပအိုဝ်ႏဘာႏသာႏ&quot;
+      link[e338] &quot;ပအိုဝ်ႏဘာႏသာႏ&quot;
+    listitem &quot;Bamanankan&quot;
+      link[e339] &quot;Bamanankan&quot;
+    listitem &quot;বাংলা&quot;
+      link[e340] &quot;বাংলা&quot;
+    listitem &quot;བོད་ཡིག&quot;
+      link[e341] &quot;བོད་ཡིག&quot;
+    listitem &quot;বিষ্ণুপ্রিয়া মণিপুরী&quot;
+      link[e342] &quot;বিষ্ণুপ্রিয়া মণিপুরী&quot;
+    listitem &quot;Brezhoneg&quot;
+      link[e343] &quot;Brezhoneg&quot;
+    listitem &quot;Bosanski&quot;
+      link[e344] &quot;Bosanski&quot;
+    listitem &quot;Batak Mandailing&quot;
+      link[e345] &quot;Batak Mandailing&quot;
+    listitem &quot;Basa Ugi&quot;
+      link[e346] &quot;Basa Ugi&quot;
+    listitem &quot;Буряад&quot;
+      link[e347] &quot;Буряад&quot;
+    listitem &quot;Català&quot;
+      link[e348] &quot;Català&quot;
+    listitem &quot;Chavacano de Zamboanga&quot;
+      link[e349] &quot;Chavacano de Zamboanga&quot;
+    listitem &quot;閩東語 / Mìng-dĕ̤ng-ngṳ̄&quot;
+      link[e350] &quot;閩東語 / Mìng-dĕ̤ng-ngṳ̄&quot;
+    listitem &quot;Нохчийн&quot;
+      link[e351] &quot;Нохчийн&quot;
+    listitem &quot;Cebuano&quot;
+      link[e352] &quot;Cebuano&quot;
+    listitem &quot;Chamoru&quot;
+      link[e353] &quot;Chamoru&quot;
+    listitem &quot;ᏣᎳᎩ&quot;
+      link[e354] &quot;ᏣᎳᎩ&quot;
+    listitem &quot;Tsetsêhestâhese&quot;
+      link[e355] &quot;Tsetsêhestâhese&quot;
+    listitem &quot;کوردی&quot;
+      link[e356] &quot;کوردی&quot;
+    listitem &quot;Corsu&quot;
+      link[e357] &quot;Corsu&quot;
+    listitem &quot;Nēhiyawēwin / ᓀᐦᐃᔭᐍᐏᐣ&quot;
+      link[e358] &quot;Nēhiyawēwin / ᓀᐦᐃᔭᐍᐏᐣ&quot;
+    listitem &quot;Qırımtatarca&quot;
+      link[e359] &quot;Qırımtatarca&quot;
+    listitem &quot;Čeština&quot;
+      link[e360] &quot;Čeština&quot;
+    listitem &quot;Kaszëbsczi&quot;
+      link[e361] &quot;Kaszëbsczi&quot;
+    listitem &quot;Словѣньскъ / ⰔⰎⰑⰂⰡⰐⰠⰔⰍⰟ&quot;
+      link[e362] &quot;Словѣньскъ / ⰔⰎⰑⰂⰡⰐⰠⰔⰍⰟ&quot;
+    listitem &quot;Чӑвашла&quot;
+      link[e363] &quot;Чӑвашла&quot;
+    listitem &quot;Cymraeg&quot;
+      link[e364] &quot;Cymraeg&quot;
+    listitem &quot;Dansk&quot;
+      link[e365] &quot;Dansk&quot;
+    listitem &quot;Dagbanli&quot;
+      link[e366] &quot;Dagbanli&quot;
+    listitem &quot;Deutsch&quot;
+      link[e367] &quot;Deutsch&quot;
+    listitem &quot;Dagaare&quot;
+      link[e368] &quot;Dagaare&quot;
+    listitem &quot;Thuɔŋjäŋ&quot;
+      link[e369] &quot;Thuɔŋjäŋ&quot;
+    listitem &quot;Zazaki&quot;
+      link[e370] &quot;Zazaki&quot;
+    listitem &quot;Dolnoserbski&quot;
+      link[e371] &quot;Dolnoserbski&quot;
+    listitem &quot;Kadazandusun&quot;
+      link[e372] &quot;Kadazandusun&quot;
+    listitem &quot;डोटेली&quot;
+      link[e373] &quot;डोटेली&quot;
+    listitem &quot;ދިވެހިބަސް&quot;
+      link[e374] &quot;ދިވެހިބަސް&quot;
+    listitem &quot;ཇོང་ཁ&quot;
+      link[e375] &quot;ཇོང་ཁ&quot;
+    listitem &quot;Eʋegbe&quot;
+      link[e376] &quot;Eʋegbe&quot;
+    listitem &quot;Ελληνικά&quot;
+      link[e377] &quot;Ελληνικά&quot;
+    listitem &quot;Emiliàn e rumagnòl&quot;
+      link[e378] &quot;Emiliàn e rumagnòl&quot;
+    listitem &quot;Esperanto&quot;
+      link[e379] &quot;Esperanto&quot;
+    listitem &quot;Español&quot;
+      link[e380] &quot;Español&quot;
+    listitem &quot;Eesti&quot;
+      link[e381] &quot;Eesti&quot;
+    listitem &quot;Euskara&quot;
+      link[e382] &quot;Euskara&quot;
+    listitem &quot;Estremeñu&quot;
+      link[e383] &quot;Estremeñu&quot;
+    listitem &quot;فارسی&quot;
+      link[e384] &quot;فارسی&quot;
+    listitem &quot;Mfantse&quot;
+      link[e385] &quot;Mfantse&quot;
+    listitem &quot;Fulfulde&quot;
+      link[e386] &quot;Fulfulde&quot;
+    listitem &quot;Suomi&quot;
+      link[e387] &quot;Suomi&quot;
+    listitem &quot;Võro&quot;
+      link[e388] &quot;Võro&quot;
+    listitem &quot;Na Vosa Vakaviti&quot;
+      link[e389] &quot;Na Vosa Vakaviti&quot;
+    listitem &quot;Føroyskt&quot;
+      link[e390] &quot;Føroyskt&quot;
+    listitem &quot;Fɔ̀ngbè&quot;
+      link[e391] &quot;Fɔ̀ngbè&quot;
+    listitem &quot;Français&quot;
+      link[e392] &quot;Français&quot;
+    listitem &quot;Arpetan&quot;
+      link[e393] &quot;Arpetan&quot;
+    listitem &quot;Nordfriisk&quot;
+      link[e394] &quot;Nordfriisk&quot;
+    listitem &quot;Furlan&quot;
+      link[e395] &quot;Furlan&quot;
+    listitem &quot;Frysk&quot;
+      link[e396] &quot;Frysk&quot;
+    listitem &quot;Gaeilge&quot;
+      link[e397] &quot;Gaeilge&quot;
+    listitem &quot;Gagauz&quot;
+      link[e398] &quot;Gagauz&quot;
+    listitem &quot;贛語&quot;
+      link[e399] &quot;贛語&quot;
+    listitem &quot;Kriyòl gwiyannen&quot;
+      link[e400] &quot;Kriyòl gwiyannen&quot;
+    listitem &quot;Gàidhlig&quot;
+      link[e401] &quot;Gàidhlig&quot;
+    listitem &quot;Galego&quot;
+      link[e402] &quot;Galego&quot;
+    listitem &quot;گیلکی&quot;
+      link[e403] &quot;گیلکی&quot;
+    listitem &quot;Avañe&#x27;ẽ&quot;
+      link[e404] &quot;Avañe&#x27;ẽ&quot;
+    listitem &quot;गोंयची कोंकणी / Gõychi Konknni&quot;
+      link[e405] &quot;गोंयची कोंकणी / Gõychi Konknni&quot;
+    listitem &quot;Bahasa Hulontalo&quot;
+      link[e406] &quot;Bahasa Hulontalo&quot;
+    listitem &quot;𐌲𐌿𐍄𐌹𐍃𐌺&quot;
+      link[e407] &quot;𐌲𐌿𐍄𐌹𐍃𐌺&quot;
+    listitem &quot;Ghanaian Pidgin&quot;
+      link[e408] &quot;Ghanaian Pidgin&quot;
+    listitem &quot;ગુજરાતી&quot;
+      link[e409] &quot;ગુજરાતી&quot;
+    listitem &quot;Wayuunaiki&quot;
+      link[e410] &quot;Wayuunaiki&quot;
+    listitem &quot;Farefare&quot;
+      link[e411] &quot;Farefare&quot;
+    listitem &quot;Gungbe&quot;
+      link[e412] &quot;Gungbe&quot;
+    listitem &quot;Gaelg&quot;
+      link[e413] &quot;Gaelg&quot;
+    listitem &quot;Hausa&quot;
+      link[e414] &quot;Hausa&quot;
+    listitem &quot;客家語 / Hak-kâ-ngî&quot;
+      link[e415] &quot;客家語 / Hak-kâ-ngî&quot;
+    listitem &quot;Hawaiʻi&quot;
+      link[e416] &quot;Hawaiʻi&quot;
+    listitem &quot;עברית&quot;
+      link[e417] &quot;עברית&quot;
+    listitem &quot;हिन्दी&quot;
+      link[e418] &quot;हिन्दी&quot;
+    listitem &quot;Fiji Hindi&quot;
+      link[e419] &quot;Fiji Hindi&quot;
+    listitem &quot;Hrvatski&quot;
+      link[e420] &quot;Hrvatski&quot;
+    listitem &quot;Hornjoserbsce&quot;
+      link[e421] &quot;Hornjoserbsce&quot;
+    listitem &quot;Kreyòl ayisyen&quot;
+      link[e422] &quot;Kreyòl ayisyen&quot;
+    listitem &quot;Magyar&quot;
+      link[e423] &quot;Magyar&quot;
+    listitem &quot;Հայերեն&quot;
+      link[e424] &quot;Հայերեն&quot;
+    listitem &quot;Արեւմտահայերէն&quot;
+      link[e425] &quot;Արեւմտահայերէն&quot;
+    listitem &quot;Interlingua&quot;
+      link[e426] &quot;Interlingua&quot;
+    listitem &quot;Jaku Iban&quot;
+      link[e427] &quot;Jaku Iban&quot;
+    listitem &quot;Bahasa Indonesia&quot;
+      link[e428] &quot;Bahasa Indonesia&quot;
+    listitem &quot;Interlingue&quot;
+      link[e429] &quot;Interlingue&quot;
+    listitem &quot;Igbo&quot;
+      link[e430] &quot;Igbo&quot;
+    listitem &quot;Igala&quot;
+      link[e431] &quot;Igala&quot;
+    listitem &quot;Iñupiatun&quot;
+      link[e432] &quot;Iñupiatun&quot;
+    listitem &quot;Ilokano&quot;
+      link[e433] &quot;Ilokano&quot;
+    listitem &quot;ГӀалгӀай&quot;
+      link[e434] &quot;ГӀалгӀай&quot;
+    listitem &quot;Ido&quot;
+      link[e435] &quot;Ido&quot;
+    listitem &quot;Íslenska&quot;
+      link[e436] &quot;Íslenska&quot;
+    listitem &quot;Italiano&quot;
+      link[e437] &quot;Italiano&quot;
+    listitem &quot;ᐃᓄᒃᑎᑐᑦ / inuktitut&quot;
+      link[e438] &quot;ᐃᓄᒃᑎᑐᑦ / inuktitut&quot;
+    listitem &quot;日本語&quot;
+      link[e439] &quot;日本語&quot;
+    listitem &quot;Patois&quot;
+      link[e440] &quot;Patois&quot;
+    listitem &quot;La .lojban.&quot;
+      link[e441] &quot;La .lojban.&quot;
+    listitem &quot;Jawa&quot;
+      link[e442] &quot;Jawa&quot;
+    listitem &quot;ქართული&quot;
+      link[e443] &quot;ქართული&quot;
+    listitem &quot;Qaraqalpaqsha&quot;
+      link[e444] &quot;Qaraqalpaqsha&quot;
+    listitem &quot;Taqbaylit&quot;
+      link[e445] &quot;Taqbaylit&quot;
+    listitem &quot;Karai-karai&quot;
+      link[e446] &quot;Karai-karai&quot;
+    listitem &quot;Jju&quot;
+      link[e447] &quot;Jju&quot;
+    listitem &quot;Адыгэбзэ&quot;
+      link[e448] &quot;Адыгэбзэ&quot;
+    listitem &quot;Kabɩyɛ&quot;
+      link[e449] &quot;Kabɩyɛ&quot;
+    listitem &quot;Tyap&quot;
+      link[e450] &quot;Tyap&quot;
+    listitem &quot;Kongo&quot;
+      link[e451] &quot;Kongo&quot;
+    listitem &quot;Kumoring&quot;
+      link[e452] &quot;Kumoring&quot;
+    listitem &quot;Gĩkũyũ&quot;
+      link[e453] &quot;Gĩkũyũ&quot;
+    listitem &quot;Қазақша&quot;
+      link[e454] &quot;Қазақша&quot;
+    listitem &quot;Kalaallisut&quot;
+      link[e455] &quot;Kalaallisut&quot;
+    listitem &quot;ភាសាខ្មែរ&quot;
+      link[e456] &quot;ភាសាខ្មែរ&quot;
+    listitem &quot;ಕನ್ನಡ&quot;
+      link[e457] &quot;ಕನ್ನಡ&quot;
+    listitem &quot;Yerwa Kanuri&quot;
+      link[e458] &quot;Yerwa Kanuri&quot;
+    listitem &quot;한국어&quot;
+      link[e459] &quot;한국어&quot;
+    listitem &quot;Перем коми&quot;
+      link[e460] &quot;Перем коми&quot;
+    listitem &quot;Къарачай-малкъар&quot;
+      link[e461] &quot;Къарачай-малкъар&quot;
+    listitem &quot;کٲشُر&quot;
+      link[e462] &quot;کٲشُر&quot;
+    listitem &quot;Ripoarisch&quot;
+      link[e463] &quot;Ripoarisch&quot;
+    listitem &quot;Kurdî&quot;
+      link[e464] &quot;Kurdî&quot;
+    listitem &quot;Kʋsaal&quot;
+      link[e465] &quot;Kʋsaal&quot;
+    listitem &quot;Коми&quot;
+      link[e466] &quot;Коми&quot;
+    listitem &quot;Kernowek&quot;
+      link[e467] &quot;Kernowek&quot;
+    listitem &quot;Кыргызча&quot;
+      link[e468] &quot;Кыргызча&quot;
+    listitem &quot;Latina&quot;
+      link[e469] &quot;Latina&quot;
+    listitem &quot;Ladino&quot;
+      link[e470] &quot;Ladino&quot;
+    listitem &quot;Lëtzebuergesch&quot;
+      link[e471] &quot;Lëtzebuergesch&quot;
+    listitem &quot;Лакку&quot;
+      link[e472] &quot;Лакку&quot;
+    listitem &quot;Лезги&quot;
+      link[e473] &quot;Лезги&quot;
+    listitem &quot;Lingua Franca Nova&quot;
+      link[e474] &quot;Lingua Franca Nova&quot;
+    listitem &quot;Luganda&quot;
+      link[e475] &quot;Luganda&quot;
+    listitem &quot;Limburgs&quot;
+      link[e476] &quot;Limburgs&quot;
+    listitem &quot;Ligure&quot;
+      link[e477] &quot;Ligure&quot;
+    listitem &quot;Ladin&quot;
+      link[e478] &quot;Ladin&quot;
+    listitem &quot;Lombard&quot;
+      link[e479] &quot;Lombard&quot;
+    listitem &quot;Lingála&quot;
+      link[e480] &quot;Lingála&quot;
+    listitem &quot;ລາວ&quot;
+      link[e481] &quot;ລາວ&quot;
+    listitem &quot;Lietuvių&quot;
+      link[e482] &quot;Lietuvių&quot;
+    listitem &quot;Latgaļu&quot;
+      link[e483] &quot;Latgaļu&quot;
+    listitem &quot;Latviešu&quot;
+      link[e484] &quot;Latviešu&quot;
+    listitem &quot;Madhurâ&quot;
+      link[e485] &quot;Madhurâ&quot;
+    listitem &quot;मैथिली&quot;
+      link[e486] &quot;मैथिली&quot;
+    listitem &quot;Basa Banyumasan&quot;
+      link[e487] &quot;Basa Banyumasan&quot;
+    listitem &quot;Мокшень&quot;
+      link[e488] &quot;Мокшень&quot;
+    listitem &quot;Malagasy&quot;
+      link[e489] &quot;Malagasy&quot;
+    listitem &quot;Олык марий&quot;
+      link[e490] &quot;Олык марий&quot;
+    listitem &quot;Māori&quot;
+      link[e491] &quot;Māori&quot;
+    listitem &quot;Minangkabau&quot;
+      link[e492] &quot;Minangkabau&quot;
+    listitem &quot;Македонски&quot;
+      link[e493] &quot;Македонски&quot;
+    listitem &quot;മലയാളം&quot;
+      link[e494] &quot;മലയാളം&quot;
+    listitem &quot;Монгол&quot;
+      link[e495] &quot;Монгол&quot;
+    listitem &quot;ꯃꯤꯇꯩ ꯂꯣꯟ&quot;
+      link[e496] &quot;ꯃꯤꯇꯩ ꯂꯣꯟ&quot;
+    listitem &quot;ဘာသာမန်&quot;
+      link[e497] &quot;ဘာသာမန်&quot;
+    listitem &quot;Moore&quot;
+      link[e498] &quot;Moore&quot;
+    listitem &quot;मराठी&quot;
+      link[e499] &quot;मराठी&quot;
+    listitem &quot;Кырык мары&quot;
+      link[e500] &quot;Кырык мары&quot;
+    listitem &quot;Bahasa Melayu&quot;
+      link[e501] &quot;Bahasa Melayu&quot;
+    listitem &quot;Malti&quot;
+      link[e502] &quot;Malti&quot;
+    listitem &quot;Mirandés&quot;
+      link[e503] &quot;Mirandés&quot;
+    listitem &quot;မြန်မာဘာသာ&quot;
+      link[e504] &quot;မြန်မာဘာသာ&quot;
+    listitem &quot;Эрзянь&quot;
+      link[e505] &quot;Эрзянь&quot;
+    listitem &quot;مازِرونی&quot;
+      link[e506] &quot;مازِرونی&quot;
+    listitem &quot;Nāhuatl&quot;
+      link[e507] &quot;Nāhuatl&quot;
+    listitem &quot;Napulitano&quot;
+      link[e508] &quot;Napulitano&quot;
+    listitem &quot;Nedersaksies&quot;
+      link[e509] &quot;Nedersaksies&quot;
+    listitem &quot;Plattdüütsch&quot;
+      link[e510] &quot;Plattdüütsch&quot;
+    listitem &quot;नेपाली&quot;
+      link[e511] &quot;नेपाली&quot;
+    listitem &quot;नेपाल भाषा&quot;
+      link[e512] &quot;नेपाल भाषा&quot;
+    listitem &quot;Li Niha&quot;
+      link[e513] &quot;Li Niha&quot;
+    listitem &quot;Nederlands&quot;
+      link[e514] &quot;Nederlands&quot;
+    listitem &quot;Norsk nynorsk&quot;
+      link[e515] &quot;Norsk nynorsk&quot;
+    listitem &quot;Norsk bokmål&quot;
+      link[e516] &quot;Norsk bokmål&quot;
+    listitem &quot;Novial&quot;
+      link[e517] &quot;Novial&quot;
+    listitem &quot;ߒߞߏ&quot;
+      link[e518] &quot;ߒߞߏ&quot;
+    listitem &quot;IsiNdebele seSewula&quot;
+      link[e519] &quot;IsiNdebele seSewula&quot;
+    listitem &quot;Nouormand&quot;
+      link[e520] &quot;Nouormand&quot;
+    listitem &quot;Sesotho sa Leboa&quot;
+      link[e521] &quot;Sesotho sa Leboa&quot;
+    listitem &quot;Nupe&quot;
+      link[e522] &quot;Nupe&quot;
+    listitem &quot;Diné bizaad&quot;
+      link[e523] &quot;Diné bizaad&quot;
+    listitem &quot;Chi-Chewa&quot;
+      link[e524] &quot;Chi-Chewa&quot;
+    listitem &quot;Occitan&quot;
+      link[e525] &quot;Occitan&quot;
+    listitem &quot;Livvinkarjala&quot;
+      link[e526] &quot;Livvinkarjala&quot;
+    listitem &quot;Oromoo&quot;
+      link[e527] &quot;Oromoo&quot;
+    listitem &quot;ଓଡ଼ିଆ&quot;
+      link[e528] &quot;ଓଡ଼ିଆ&quot;
+    listitem &quot;Ирон&quot;
+      link[e529] &quot;Ирон&quot;
+    listitem &quot;ਪੰਜਾਬੀ&quot;
+      link[e530] &quot;ਪੰਜਾਬੀ&quot;
+    listitem &quot;Pangasinan&quot;
+      link[e531] &quot;Pangasinan&quot;
+    listitem &quot;Kapampangan&quot;
+      link[e532] &quot;Kapampangan&quot;
+    listitem &quot;Papiamentu&quot;
+      link[e533] &quot;Papiamentu&quot;
+    listitem &quot;Picard&quot;
+      link[e534] &quot;Picard&quot;
+    listitem &quot;Naijá&quot;
+      link[e535] &quot;Naijá&quot;
+    listitem &quot;Deitsch&quot;
+      link[e536] &quot;Deitsch&quot;
+    listitem &quot;Pälzisch&quot;
+      link[e537] &quot;Pälzisch&quot;
+    listitem &quot;पालि&quot;
+      link[e538] &quot;पालि&quot;
+    listitem &quot;Polski&quot;
+      link[e539] &quot;Polski&quot;
+    listitem &quot;Piemontèis&quot;
+      link[e540] &quot;Piemontèis&quot;
+    listitem &quot;پنجابی&quot;
+      link[e541] &quot;پنجابی&quot;
+    listitem &quot;Ποντιακά&quot;
+      link[e542] &quot;Ποντιακά&quot;
+    listitem &quot;Nawat&quot;
+      link[e543] &quot;Nawat&quot;
+    listitem &quot;پښتو&quot;
+      link[e544] &quot;پښتو&quot;
+    listitem &quot;Português&quot;
+      link[e545] &quot;Português&quot;
+    listitem &quot;Pinayuanan&quot;
+      link[e546] &quot;Pinayuanan&quot;
+    listitem &quot;Runa Simi&quot;
+      link[e547] &quot;Runa Simi&quot;
+    listitem &quot;ရခိုင်&quot;
+      link[e548] &quot;ရခိုင်&quot;
+    listitem &quot;Rumantsch&quot;
+      link[e549] &quot;Rumantsch&quot;
+    listitem &quot;Romani čhib&quot;
+      link[e550] &quot;Romani čhib&quot;
+    listitem &quot;Ikirundi&quot;
+      link[e551] &quot;Ikirundi&quot;
+    listitem &quot;Română&quot;
+      link[e552] &quot;Română&quot;
+    listitem &quot;Armãneashti&quot;
+      link[e553] &quot;Armãneashti&quot;
+    listitem &quot;Tarandíne&quot;
+      link[e554] &quot;Tarandíne&quot;
+    listitem &quot;Руски&quot;
+      link[e555] &quot;Руски&quot;
+    listitem &quot;Русский&quot;
+      link[e556] &quot;Русский&quot;
+    listitem &quot;Русиньскый&quot;
+      link[e557] &quot;Русиньскый&quot;
+    listitem &quot;Ikinyarwanda&quot;
+      link[e558] &quot;Ikinyarwanda&quot;
+    listitem &quot;संस्कृतम्&quot;
+      link[e559] &quot;संस्कृतम्&quot;
+    listitem &quot;Саха тыла&quot;
+      link[e560] &quot;Саха тыла&quot;
+    listitem &quot;ᱥᱟᱱᱛᱟᱲᱤ&quot;
+      link[e561] &quot;ᱥᱟᱱᱛᱟᱲᱤ&quot;
+    listitem &quot;Sardu&quot;
+      link[e562] &quot;Sardu&quot;
+    listitem &quot;Sicilianu&quot;
+      link[e563] &quot;Sicilianu&quot;
+    listitem &quot;Scots&quot;
+      link[e564] &quot;Scots&quot;
+    listitem &quot;سنڌي&quot;
+      link[e565] &quot;سنڌي&quot;
+    listitem &quot;Davvisámegiella&quot;
+      link[e566] &quot;Davvisámegiella&quot;
+    listitem &quot;Sängö&quot;
+      link[e567] &quot;Sängö&quot;
+    listitem &quot;Srpskohrvatski / српскохрватски&quot;
+      link[e568] &quot;Srpskohrvatski / српскохрватски&quot;
+    listitem &quot;Taclḥit&quot;
+      link[e569] &quot;Taclḥit&quot;
+    listitem &quot;တႆး&quot;
+      link[e570] &quot;တႆး&quot;
+    listitem &quot;සිංහල&quot;
+      link[e571] &quot;සිංහල&quot;
+    listitem &quot;Simple English&quot;
+      link[e572] &quot;Simple English&quot;
+    listitem &quot;Slovenčina&quot;
+      link[e573] &quot;Slovenčina&quot;
+    listitem &quot;سرائیکی&quot;
+      link[e574] &quot;سرائیکی&quot;
+    listitem &quot;Slovenščina&quot;
+      link[e575] &quot;Slovenščina&quot;
+    listitem &quot;Gagana Samoa&quot;
+      link[e576] &quot;Gagana Samoa&quot;
+    listitem &quot;Anarâškielâ&quot;
+      link[e577] &quot;Anarâškielâ&quot;
+    listitem &quot;ChiShona&quot;
+      link[e578] &quot;ChiShona&quot;
+    listitem &quot;Soomaaliga&quot;
+      link[e579] &quot;Soomaaliga&quot;
+    listitem &quot;Shqip&quot;
+      link[e580] &quot;Shqip&quot;
+    listitem &quot;Српски / srpski&quot;
+      link[e581] &quot;Српски / srpski&quot;
+    listitem &quot;Sranantongo&quot;
+      link[e582] &quot;Sranantongo&quot;
+    listitem &quot;SiSwati&quot;
+      link[e583] &quot;SiSwati&quot;
+    listitem &quot;Sesotho&quot;
+      link[e584] &quot;Sesotho&quot;
+    listitem &quot;Seeltersk&quot;
+      link[e585] &quot;Seeltersk&quot;
+    listitem &quot;Sunda&quot;
+      link[e586] &quot;Sunda&quot;
+    listitem &quot;Svenska&quot;
+      link[e587] &quot;Svenska&quot;
+    listitem &quot;Kiswahili&quot;
+      link[e588] &quot;Kiswahili&quot;
+    listitem &quot;ꠍꠤꠟꠐꠤ&quot;
+      link[e589] &quot;ꠍꠤꠟꠐꠤ&quot;
+    listitem &quot;Ślůnski&quot;
+      link[e590] &quot;Ślůnski&quot;
+    listitem &quot;Sakizaya&quot;
+      link[e591] &quot;Sakizaya&quot;
+    listitem &quot;தமிழ்&quot;
+      link[e592] &quot;தமிழ்&quot;
+    listitem &quot;Tayal&quot;
+      link[e593] &quot;Tayal&quot;
+    listitem &quot;ತುಳು&quot;
+      link[e594] &quot;ತುಳು&quot;
+    listitem &quot;ᥖᥭᥰ ᥖᥬᥲ ᥑᥨᥒᥰ&quot;
+      link[e595] &quot;ᥖᥭᥰ ᥖᥬᥲ ᥑᥨᥒᥰ&quot;
+    listitem &quot;తెలుగు&quot;
+      link[e596] &quot;తెలుగు&quot;
+    listitem &quot;Tetun&quot;
+      link[e597] &quot;Tetun&quot;
+    listitem &quot;Тоҷикӣ&quot;
+      link[e598] &quot;Тоҷикӣ&quot;
+    listitem &quot;ไทย&quot;
+      link[e599] &quot;ไทย&quot;
+    listitem &quot;ትግርኛ&quot;
+      link[e600] &quot;ትግርኛ&quot;
+    listitem &quot;ትግሬ&quot;
+      link[e601] &quot;ትግሬ&quot;
+    listitem &quot;Türkmençe&quot;
+      link[e602] &quot;Türkmençe&quot;
+    listitem &quot;Tagalog&quot;
+      link[e603] &quot;Tagalog&quot;
+    listitem &quot;Tolışi&quot;
+      link[e604] &quot;Tolışi&quot;
+    listitem &quot;Setswana&quot;
+      link[e605] &quot;Setswana&quot;
+    listitem &quot;Lea faka-Tonga&quot;
+      link[e606] &quot;Lea faka-Tonga&quot;
+    listitem &quot;Toki pona&quot;
+      link[e607] &quot;Toki pona&quot;
+    listitem &quot;Tok Pisin&quot;
+      link[e608] &quot;Tok Pisin&quot;
+    listitem &quot;Türkçe&quot;
+      link[e609] &quot;Türkçe&quot;
+    listitem &quot;Seediq&quot;
+      link[e610] &quot;Seediq&quot;
+    listitem &quot;Xitsonga&quot;
+      link[e611] &quot;Xitsonga&quot;
+    listitem &quot;Татарча / tatarça&quot;
+      link[e612] &quot;Татарча / tatarça&quot;
+    listitem &quot;ChiTumbuka&quot;
+      link[e613] &quot;ChiTumbuka&quot;
+    listitem &quot;Twi&quot;
+      link[e614] &quot;Twi&quot;
+    listitem &quot;Reo tahiti&quot;
+      link[e615] &quot;Reo tahiti&quot;
+    listitem &quot;Тыва дыл&quot;
+      link[e616] &quot;Тыва дыл&quot;
+    listitem &quot;Удмурт&quot;
+      link[e617] &quot;Удмурт&quot;
+    listitem &quot;ئۇيغۇرچە / Uyghurche&quot;
+      link[e618] &quot;ئۇيغۇرچە / Uyghurche&quot;
+    listitem &quot;Українська&quot;
+      link[e619] &quot;Українська&quot;
+    listitem &quot;اردو&quot;
+      link[e620] &quot;اردو&quot;
+    listitem &quot;Oʻzbekcha / ўзбекча&quot;
+      link[e621] &quot;Oʻzbekcha / ўзбекча&quot;
+    listitem &quot;Tshivenda&quot;
+      link[e622] &quot;Tshivenda&quot;
+    listitem &quot;Vèneto&quot;
+      link[e623] &quot;Vèneto&quot;
+    listitem &quot;Vepsän kel’&quot;
+      link[e624] &quot;Vepsän kel’&quot;
+    listitem &quot;Tiếng Việt&quot;
+      link[e625] &quot;Tiếng Việt&quot;
+    listitem &quot;West-Vlams&quot;
+      link[e626] &quot;West-Vlams&quot;
+    listitem &quot;Volapük&quot;
+      link[e627] &quot;Volapük&quot;
+    listitem &quot;Walon&quot;
+      link[e628] &quot;Walon&quot;
+    listitem &quot;Winaray&quot;
+      link[e629] &quot;Winaray&quot;
+    listitem &quot;Wolof&quot;
+      link[e630] &quot;Wolof&quot;
+    listitem &quot;吴语&quot;
+      link[e631] &quot;吴语&quot;
+    listitem &quot;Хальмг&quot;
+      link[e632] &quot;Хальмг&quot;
+    listitem &quot;IsiXhosa&quot;
+      link[e633] &quot;IsiXhosa&quot;
+    listitem &quot;მარგალური&quot;
+      link[e634] &quot;მარგალური&quot;
+    listitem &quot;ייִדיש&quot;
+      link[e635] &quot;ייִדיש&quot;
+    listitem &quot;Yorùbá&quot;
+      link[e636] &quot;Yorùbá&quot;
+    listitem &quot;Vahcuengh&quot;
+      link[e637] &quot;Vahcuengh&quot;
+    listitem &quot;Zeêuws&quot;
+      link[e638] &quot;Zeêuws&quot;
+    listitem &quot;ⵜⴰⵎⴰⵣⵉⵖⵜ ⵜⴰⵏⴰⵡⴰⵢⵜ&quot;
+      link[e639] &quot;ⵜⴰⵎⴰⵣⵉⵖⵜ ⵜⴰⵏⴰⵡⴰⵢⵜ&quot;
+    listitem &quot;文言&quot;
+      link[e640] &quot;文言&quot;
+    listitem &quot;閩南語 / Bân-lâm-gí&quot;
+      link[e641] &quot;閩南語 / Bân-lâm-gí&quot;
+    listitem &quot;粵語&quot;
+      link[e642] &quot;粵語&quot;
+    listitem &quot;中文&quot;
+      link[e643] &quot;中文&quot;
+    listitem &quot;IsiZulu&quot;
+      link[e644] &quot;IsiZulu&quot;
+  link[e645] &quot;Edit links&quot;
+contentinfo
+  list
+    listitem &quot;This page was last edited on 12 June 2026, at 07:37 (UTC) .&quot;
+    listitem &quot;Page was rendered with Parsoid .&quot;
+      link[e646] &quot;Parsoid&quot;
+    listitem &quot;Text is available under the Creative Commons Attribution-ShareAlike 4.0 License ; additional terms may apply. By using this site, you agree to the Terms of Use and Privacy Policy . Wikipedia® is a registered trademark of the Wikimedia Foundation, Inc. , a non-profit organization.&quot;
+      link[e647] &quot;Creative Commons Attribution-ShareAlike 4.0 License&quot;
+      link[e648] &quot;Terms of Use&quot;
+      link[e649] &quot;Privacy Policy&quot;
+      link[e650] &quot;Wikimedia Foundation, Inc.&quot;
+  list
+    listitem &quot;Privacy policy&quot;
+      link[e651] &quot;Privacy policy&quot;
+    listitem &quot;About Wikipedia&quot;
+      link[e652] &quot;About Wikipedia&quot;
+    listitem &quot;Disclaimers&quot;
+      link[e653] &quot;Disclaimers&quot;
+    listitem &quot;Contact Wikipedia&quot;
+      link[e654] &quot;Contact Wikipedia&quot;
+    listitem &quot;Legal &amp; safety contacts&quot;
+      link[e655] &quot;Legal &amp; safety contacts&quot;
+    listitem &quot;Code of Conduct&quot;
+      link[e656] &quot;Code of Conduct&quot;
+    listitem &quot;Developers&quot;
+      link[e657] &quot;Developers&quot;
+    listitem &quot;Statistics&quot;
+      link[e658] &quot;Statistics&quot;
+    listitem &quot;Cookie statement&quot;
+      link[e659] &quot;Cookie statement&quot;
+    listitem &quot;Mobile view&quot;
+      link[e660] &quot;Mobile view&quot;
+  list
+    listitem
+      link[e661]
+    listitem
+      link[e662]
+button[e663] &quot;Search&quot;
+search
+  form
+    textbox[e664] &quot;Search Wikipedia&quot;
+    button[e665] &quot;Search&quot;
+link[e666]
+link[e667]
+link[e668]
+link[e669]
+link[e670]
+link[e671]
+link[e672]
+button[e673] &quot;346 languages&quot;
+link[e674] &quot;Add topic&quot;</pre>
+    <div class="step-meta">
+      <span class="action-pill">type &quot;creator of the Python programming language&quot; into e19</span>
+      <div class="token-line">this page: <b class="snap">9,516</b> snapshot tokens
+        vs <b class="raw">89,581</b> raw HTML tokens</div>
+      <div class="token-line">running total: <b class="snap">9,516</b> seen by agent
+        vs <b class="raw">89,581</b> raw HTML equivalent</div>
+    </div>
+  </div>
+</div>
+<div class="step">
+  <div class="step-head">
+    <span class="step-idx">step 1</span>
+    <span class="step-title">Wikipedia, the free encyclopedia — https://en.wikipedia.org/wiki/Main_Page</span>
+  </div>
+  <div class="step-body">
+    <pre class="snapshot">document &quot;Wikipedia, the free encyclopedia&quot;
+link[e1] &quot;Jump to content&quot;
+banner
+  navigation &quot;Site&quot;
+    checkbox[e2] &quot;Main menu&quot;
+    label &quot;Main menu&quot;
+    button[e3] &quot;move to sidebar&quot;
+    button[e4] &quot;hide&quot;
+    list
+      listitem &quot;Main page&quot;
+        link[e5] &quot;Main page&quot;
+      listitem &quot;Contents&quot;
+        link[e6] &quot;Contents&quot;
+      listitem &quot;Current events&quot;
+        link[e7] &quot;Current events&quot;
+      listitem &quot;Random article&quot;
+        link[e8] &quot;Random article&quot;
+      listitem &quot;About Wikipedia&quot;
+        link[e9] &quot;About Wikipedia&quot;
+      listitem &quot;Contact us&quot;
+        link[e10] &quot;Contact us&quot;
+    list
+      listitem &quot;Help&quot;
+        link[e11] &quot;Help&quot;
+      listitem &quot;Learn to edit&quot;
+        link[e12] &quot;Learn to edit&quot;
+      listitem &quot;Community portal&quot;
+        link[e13] &quot;Community portal&quot;
+      listitem &quot;Recent changes&quot;
+        link[e14] &quot;Recent changes&quot;
+      listitem &quot;Upload file&quot;
+        link[e15] &quot;Upload file&quot;
+      listitem &quot;Special pages&quot;
+        link[e16] &quot;Special pages&quot;
+  link[e17]
+  search
+    link[e18] &quot;Search&quot;
+    form
+      textbox[e19] &quot;Search Wikipedia&quot;
+      button[e20] &quot;Search&quot;
+  navigation &quot;Personal tools&quot;
+    navigation &quot;Appearance&quot;
+      checkbox[e21] &quot;Appearance&quot;
+      label &quot;Appearance&quot;
+    list
+      listitem &quot;Donate&quot;
+        link[e22] &quot;Donate&quot;
+      listitem &quot;Create account&quot;
+        link[e23] &quot;Create account&quot;
+      listitem &quot;Log in&quot;
+        link[e24] &quot;Log in&quot;
+    checkbox[e25] &quot;Personal tools&quot;
+    label &quot;Personal tools&quot;
+    list
+      listitem &quot;Donate&quot;
+        link[e26] &quot;Donate&quot;
+      listitem &quot;Create account&quot;
+        link[e27] &quot;Create account&quot;
+      listitem &quot;Log in&quot;
+        link[e28] &quot;Log in&quot;
+navigation &quot;Site&quot;
+main
+  banner
+    heading &quot;Main Page&quot;
+  navigation &quot;Namespaces&quot;
+    list
+      listitem &quot;Main Page&quot;
+        link[e29] &quot;Main Page&quot;
+      listitem &quot;Talk&quot;
+        link[e30] &quot;Talk&quot;
+    checkbox[e31] &quot;Change language variant&quot;
+    label &quot;English&quot;
+  navigation &quot;Views&quot;
+    list
+      listitem &quot;Read&quot;
+        link[e32] &quot;Read&quot;
+      listitem &quot;View source&quot;
+        link[e33] &quot;View source&quot;
+      listitem &quot;View history&quot;
+        link[e34] &quot;View history&quot;
+  navigation &quot;Page tools&quot;
+    checkbox[e35] &quot;Tools&quot;
+    label &quot;Tools&quot;
+    button[e36] &quot;move to sidebar&quot;
+    button[e37] &quot;hide&quot;
+    list
+      listitem &quot;Read&quot;
+        link[e38] &quot;Read&quot;
+      listitem &quot;View source&quot;
+        link[e39] &quot;View source&quot;
+      listitem &quot;View history&quot;
+        link[e40] &quot;View history&quot;
+    list
+      listitem &quot;What links here&quot;
+        link[e41] &quot;What links here&quot;
+      listitem &quot;Related changes&quot;
+        link[e42] &quot;Related changes&quot;
+      listitem &quot;Upload file&quot;
+        link[e43] &quot;Upload file&quot;
+      listitem &quot;Permanent link&quot;
+        link[e44] &quot;Permanent link&quot;
+      listitem &quot;Page information&quot;
+        link[e45] &quot;Page information&quot;
+      listitem &quot;Cite this page&quot;
+        link[e46] &quot;Cite this page&quot;
+      listitem &quot;Get shortened URL&quot;
+        link[e47] &quot;Get shortened URL&quot;
+      listitem &quot;Switch to legacy parser&quot;
+        link[e48] &quot;Switch to legacy parser&quot;
+    list
+      listitem &quot;Download as PDF&quot;
+        link[e49] &quot;Download as PDF&quot;
+      listitem &quot;Printable version&quot;
+        link[e50] &quot;Printable version&quot;
+    list
+      listitem &quot;Abstract Wikipedia&quot;
+        link[e51] &quot;Abstract Wikipedia&quot;
+      listitem &quot;Wikimedia Commons&quot;
+        link[e52] &quot;Wikimedia Commons&quot;
+      listitem &quot;Wikimedia Foundation&quot;
+        link[e53] &quot;Wikimedia Foundation&quot;
+      listitem &quot;MediaWiki&quot;
+        link[e54] &quot;MediaWiki&quot;
+      listitem &quot;Meta-Wiki&quot;
+        link[e55] &quot;Meta-Wiki&quot;
+      listitem &quot;Wikimedia Outreach&quot;
+        link[e56] &quot;Wikimedia Outreach&quot;
+      listitem &quot;Multilingual Wikisource&quot;
+        link[e57] &quot;Multilingual Wikisource&quot;
+      listitem &quot;Wikispecies&quot;
+        link[e58] &quot;Wikispecies&quot;
+      listitem &quot;Wikibooks&quot;
+        link[e59] &quot;Wikibooks&quot;
+      listitem &quot;Wikidata&quot;
+        link[e60] &quot;Wikidata&quot;
+      listitem &quot;Wikifunctions&quot;
+        link[e61] &quot;Wikifunctions&quot;
+      listitem &quot;Wikimania&quot;
+        link[e62] &quot;Wikimania&quot;
+      listitem &quot;Wikinews&quot;
+        link[e63] &quot;Wikinews&quot;
+      listitem &quot;Wikiquote&quot;
+        link[e64] &quot;Wikiquote&quot;
+      listitem &quot;Wikisource&quot;
+        link[e65] &quot;Wikisource&quot;
+      listitem &quot;Wikiversity&quot;
+        link[e66] &quot;Wikiversity&quot;
+      listitem &quot;Wikivoyage&quot;
+        link[e67] &quot;Wikivoyage&quot;
+      listitem &quot;Wiktionary&quot;
+        link[e68] &quot;Wiktionary&quot;
+      listitem &quot;Wikidata item&quot;
+        link[e69] &quot;Wikidata item&quot;
+  navigation &quot;Page tools&quot;
+  navigation &quot;Appearance&quot;
+    button[e70] &quot;move to sidebar&quot;
+    button[e71] &quot;hide&quot;
+  region
+    heading &quot;Welcome to Wikipedia&quot;
+      link[e72] &quot;Wikipedia&quot;
+    link[e73] &quot;free&quot;
+    link[e74] &quot;anyone can edit&quot;
+    list
+      listitem &quot;249,387 active editors&quot;
+        link[e75] &quot;249,387&quot;
+      listitem &quot;7,208,177 articles in English&quot;
+        link[e76] &quot;7,208,177&quot;
+        link[e77] &quot;English&quot;
+    heading &quot;From today&#x27;s featured article&quot;
+    link[e78]
+    paragraph &quot;The Manufacturers Trust Company Building is a commercial building in Midtown Manhattan , New York City. Opened in 1954, it was the first bank building in the United States to be built in the International Style . It was commissioned by the Manufacturers Trust Company and designed by Skidmore, Owing…&quot;
+      link[e79] &quot;Manufacturers Trust Company Building&quot;
+      link[e80] &quot;Midtown Manhattan&quot;
+      link[e81] &quot;International Style&quot;
+      link[e82] &quot;Manufacturers Trust Company&quot;
+      link[e83] &quot;Skidmore, Owings &amp; Merrill&quot;
+      link[e84] &quot;façade&quot;
+      link[e85] &quot;mullions&quot;
+      link[e86] &quot;Chase Bank&quot;
+      link[e87] &quot;New York City Landmarks Preservation Commission&quot;
+      link[e88] &quot;Full article...&quot;
+    list
+      listitem &quot;History of Liverpool F.C. (1985–present)&quot;
+        link[e89] &quot;History of Liverpool F.C. (1985–present)&quot;
+      listitem &quot;Meurig ab Arthfael&quot;
+        link[e90] &quot;Meurig ab Arthfael&quot;
+      listitem &quot;Gu Yanwu&quot;
+        link[e91] &quot;Gu Yanwu&quot;
+    list
+      listitem &quot;Archive&quot;
+        link[e92] &quot;Archive&quot;
+      listitem &quot;By email&quot;
+        link[e93] &quot;By email&quot;
+      listitem &quot;More featured articles&quot;
+        link[e94] &quot;More featured articles&quot;
+      listitem &quot;About&quot;
+        link[e95] &quot;About&quot;
+    heading &quot;Did you know ...&quot;
+    link[e96]
+    list
+      listitem &quot;... that the tortilla (examples pictured) has been eaten for thousands of years , but it has only been considered a national symbol of Mexico since the 20th century?&quot;
+        link[e97] &quot;tortilla&quot;
+        link[e98] &quot;has been eaten for thousands of years&quot;
+      listitem &quot;... that magician Sterling Dietz used $1,200 in prize earnings from a chess tournament to pay for tuition at a Las Vegas magic school?&quot;
+        link[e99] &quot;Sterling Dietz&quot;
+      listitem &quot;... that permanent human settlements emerged independently in multiple regions approximately 5,000 to 10,000 years ago?&quot;
+        link[e100] &quot;human settlements&quot;
+      listitem &quot;... that a transgender-owned bookshop in Leeds ran a fundraiser in which people paid to deface pages of Harry Potter and the Chamber of Secrets ?&quot;
+        link[e101] &quot;a transgender-owned bookshop in Leeds&quot;
+        link[e102] &quot;Harry Potter and the Chamber of Secrets&quot;
+      listitem &quot;... that the fossil redwood Metasequoia milleri was described from its pollen cones?&quot;
+        link[e103] &quot;Metasequoia milleri&quot;
+      listitem &quot;... that four people and three hundred sheep died after sixteen carriages broke off a mixed-use train and collided with a goods train in Bathurst ?&quot;
+        link[e104] &quot;sixteen carriages broke off a mixed-use train and collided with a goods train&quot;
+        link[e105] &quot;Bathurst&quot;
+      listitem &quot;... that the Princedom of Zhou , unlike most other Ming princedoms, developed a strong tradition of cultural and literary learning?&quot;
+        link[e106] &quot;Princedom of Zhou&quot;
+      listitem &quot;... that practical normativity covers what people should do, while theoretical normativity is about what to believe?&quot;
+        link[e107] &quot;normativity&quot;
+      listitem &quot;... that the first volume of a yuri manga was criticized for not having enough yuri ?&quot;
+        link[e108] &quot;a yuri manga&quot;
+        link[e109] &quot;yuri&quot;
+    list
+      listitem &quot;Archive&quot;
+        link[e110] &quot;Archive&quot;
+      listitem &quot;Start a new article&quot;
+        link[e111] &quot;Start a new article&quot;
+      listitem &quot;Nominate an article&quot;
+        link[e112] &quot;Nominate an article&quot;
+    heading &quot;In the news&quot;
+    figure &quot;Beth Mooney&quot;
+      link[e113]
+    list
+      listitem &quot;Thirteen people are killed and twenty-three others are reported missing in a wildfire in Los Gallardos , Spain.&quot;
+        link[e114] &quot;a wildfire&quot;
+        link[e115] &quot;Los Gallardos&quot;
+      listitem &quot;A series of coordinated attacks across Pakistan&#x27;s Balochistan province leaves at least forty-two people dead.&quot;
+        link[e116] &quot;A series of coordinated attacks&quot;
+        link[e117] &quot;Balochistan&quot;
+      listitem &quot;The IOC provisionally lifts its suspension of the Russian Olympic Committee .&quot;
+        link[e118] &quot;IOC&quot;
+        link[e119] &quot;Russian Olympic Committee&quot;
+      listitem &quot;In cricket, the Women&#x27;s T20 World Cup concludes with Australia defeating England in the final (player of the match Beth Mooney pictured) .&quot;
+        link[e120] &quot;the Women&#x27;s T20 World Cup&quot;
+        link[e121] &quot;Australia&quot;
+        link[e122] &quot;England&quot;
+        link[e123] &quot;the final&quot;
+        link[e124] &quot;Beth Mooney&quot;
+    list
+      listitem &quot;Ebola epidemic&quot;
+        link[e125] &quot;Ebola epidemic&quot;
+      listitem &quot;FIFA World Cup&quot;
+        link[e126] &quot;FIFA World Cup&quot;
+      listitem &quot;Flamingo Revolution&quot;
+        link[e127] &quot;Flamingo Revolution&quot;
+      listitem &quot;Iran war ( Lebanon war )&quot;
+        link[e128] &quot;Iran war&quot;
+        link[e129] &quot;Lebanon war&quot;
+      listitem &quot;Russo-Ukrainian war timeline&quot;
+        link[e130] &quot;Russo-Ukrainian war&quot;
+        list
+          listitem &quot;timeline&quot;
+            link[e131] &quot;timeline&quot;
+    link[e132] &quot;Recent deaths&quot;
+    list
+      listitem &quot;Lauren Bennett&quot;
+        link[e133] &quot;Lauren Bennett&quot;
+      listitem &quot;Ann Widdecombe&quot;
+        link[e134] &quot;Ann Widdecombe&quot;
+      listitem &quot;Sharon Dede Padi&quot;
+        link[e135] &quot;Sharon Dede Padi&quot;
+      listitem &quot;Carmelo Cedrún&quot;
+        link[e136] &quot;Carmelo Cedrún&quot;
+      listitem &quot;Benedito Ruy Barbosa&quot;
+        link[e137] &quot;Benedito Ruy Barbosa&quot;
+      listitem &quot;Bonnie Tyler&quot;
+        link[e138] &quot;Bonnie Tyler&quot;
+    list
+      listitem &quot;More current events&quot;
+        link[e139] &quot;More current events&quot;
+      listitem &quot;Nominate an article&quot;
+        link[e140] &quot;Nominate an article&quot;
+    heading &quot;On this day&quot;
+    paragraph &quot;July 13 : Kashmir Martyrs&#x27; Day in Pakistan&quot;
+      link[e141] &quot;July 13&quot;
+      link[e142] &quot;Kashmir Martyrs&#x27; Day&quot;
+    link[e143]
+    list
+      listitem &quot;1643 – English Civil War : Royalist forces defeated the Parliamentarians at the Battle of Roundway Down near Devizes , Wiltshire.&quot;
+        link[e144] &quot;1643&quot;
+        link[e145] &quot;English Civil War&quot;
+        link[e146] &quot;Royalist&quot;
+        link[e147] &quot;Parliamentarians&quot;
+        link[e148] &quot;Battle of Roundway Down&quot;
+        link[e149] &quot;Devizes&quot;
+      listitem &quot;1794 – The Battle of Trippstadt between French forces and those of Prussia and Austria began.&quot;
+        link[e150] &quot;1794&quot;
+        link[e151] &quot;Battle of Trippstadt&quot;
+        link[e152] &quot;Prussia&quot;
+      listitem &quot;1831 – Wallachian officials adopted the Regulamentul Organic , which engendered a period of reforms that provided for the westernization of the local society.&quot;
+        link[e153] &quot;1831&quot;
+        link[e154] &quot;Wallachian&quot;
+        link[e155] &quot;Regulamentul Organic&quot;
+      listitem &quot;1962 – In an unprecedented reshuffle , British prime minister Harold Macmillan dismissed seven members of his cabinet .&quot;
+        link[e156] &quot;1962&quot;
+        link[e157] &quot;reshuffle&quot;
+        link[e158] &quot;Harold Macmillan&quot;
+        link[e159] &quot;dismissed seven members of his cabinet&quot;
+      listitem &quot;1999 – William Chaney (pictured) , a historian of Anglo-Saxon England , retired after a half a century at Lawrence University , by which time 80% of living alumni had attended the school during his tenure.&quot;
+        link[e160] &quot;1999&quot;
+        link[e161] &quot;William Chaney&quot;
+        link[e162] &quot;Anglo-Saxon England&quot;
+        link[e163] &quot;Lawrence University&quot;
+    list
+      listitem &quot;Afonso, Hereditary Prince of Portugal ( d. 1491)&quot;
+        link[e164] &quot;Afonso, Hereditary Prince of Portugal&quot;
+      listitem &quot;Kate Sheppard ( d. 1934)&quot;
+        link[e165] &quot;Kate Sheppard&quot;
+      listitem &quot;Ernő Rubik ( b. 1944)&quot;
+        link[e166] &quot;Ernő Rubik&quot;
+      listitem &quot;Ken Jeong ( b. 1969)&quot;
+        link[e167] &quot;Ken Jeong&quot;
+    list
+      listitem &quot;July 12&quot;
+        link[e168] &quot;July 12&quot;
+      listitem &quot;July 13&quot;
+        link[e169] &quot;July 13&quot;
+      listitem &quot;July 14&quot;
+        link[e170] &quot;July 14&quot;
+    list
+      listitem &quot;Archive&quot;
+        link[e171] &quot;Archive&quot;
+      listitem &quot;By email&quot;
+        link[e172] &quot;By email&quot;
+      listitem &quot;List of days of the year&quot;
+        link[e173] &quot;List of days of the year&quot;
+      listitem &quot;About&quot;
+        link[e174] &quot;About&quot;
+    heading &quot;From today&#x27;s featured list&quot;
+    link[e175]
+    paragraph &quot;The Ming dynasty continued the use of era names , a system introduced by Emperor Wu of Han in 114 BC, or more formally in 110 BC. A Chinese era name , or &quot;reign motto&quot;, was chosen at the beginning of an emperor&#x27;s reign to reflect the political, economic, or social conditions of the time. During the…&quot;
+      link[e176] &quot;The Ming dynasty continued the use of era names&quot;
+      link[e177] &quot;Emperor Wu of Han&quot;
+      link[e178] &quot;Chinese era name&quot;
+      link[e179] &quot;Ming dynasty&quot;
+      link[e180] &quot;Emperor Yingzong&quot;
+      link[e181] &quot;Hongwu&quot;
+      link[e182] &quot;Hongwu Emperor&quot;
+      link[e183] &quot;Chongzhen Emperor&quot;
+      link[e184] &quot;fall of Beijing&quot;
+      link[e185] &quot;Wanli&quot;
+      link[e186] &quot;Full list...&quot;
+    list
+      listitem &quot;Malcolm in the Middle episodes&quot;
+        link[e187] &quot;Malcolm in the Middle episodes&quot;
+      listitem &quot;Grammy Award for Best Rap Album&quot;
+        link[e188] &quot;Grammy Award for Best Rap Album&quot;
+      listitem &quot;Inventoried hardwoods in the United States&quot;
+        link[e189] &quot;Inventoried hardwoods in the United States&quot;
+    list
+      listitem &quot;Archive&quot;
+        link[e190] &quot;Archive&quot;
+      listitem &quot;More featured lists&quot;
+        link[e191] &quot;More featured lists&quot;
+    heading &quot;Today&#x27;s featured picture&quot;
+    presentation &quot;The Great Mosque of Central Java is a mosque in Semarang , the capital and largest city of the Indonesian province of Central Java . Dedicated in 2006, the mosque complex covers 10 hectares (25 acres). Up to 15,000 worshippers can be accommodated in the mosque and the central courtyard. This aerial…&quot;
+      row &quot;The Great Mosque of Central Java is a mosque in Semarang , the capital and largest city of the Indonesian province of Central Java . Dedicated in 2006, the mosque complex covers 10 hectares (25 acres). Up to 15,000 worshippers can be accommodated in the mosque and the central courtyard. This aerial…&quot;
+        cell
+          link[e192]
+        cell &quot;The Great Mosque of Central Java is a mosque in Semarang , the capital and largest city of the Indonesian province of Central Java . Dedicated in 2006, the mosque complex covers 10 hectares (25 acres). Up to 15,000 worshippers can be accommodated in the mosque and the central courtyard. This aerial…&quot;
+          paragraph &quot;The Great Mosque of Central Java is a mosque in Semarang , the capital and largest city of the Indonesian province of Central Java . Dedicated in 2006, the mosque complex covers 10 hectares (25 acres). Up to 15,000 worshippers can be accommodated in the mosque and the central courtyard. This aerial…&quot;
+            link[e193] &quot;Great Mosque of Central Java&quot;
+            link[e194] &quot;Semarang&quot;
+            link[e195] &quot;Central Java&quot;
+            link[e196] &quot;dakwah&quot;
+          paragraph &quot;Photograph credit: Chris Woodrich&quot;
+            link[e197] &quot;Chris Woodrich&quot;
+          list
+            listitem &quot;Maroon shining parrot&quot;
+              link[e198] &quot;Maroon shining parrot&quot;
+            listitem &quot;Arthur Tedder, 1st Baron Tedder&quot;
+              link[e199] &quot;Arthur Tedder, 1st Baron Tedder&quot;
+            listitem &quot;Pennsylvania&quot;
+              link[e200] &quot;Pennsylvania&quot;
+          list
+            listitem &quot;Archive&quot;
+              link[e201] &quot;Archive&quot;
+            listitem &quot;More featured pictures&quot;
+              link[e202] &quot;More featured pictures&quot;
+    heading &quot;Other areas of Wikipedia&quot;
+    list
+      listitem &quot;Community portal – The central hub for editors, with resources, links, tasks, and announcements.&quot;
+        link[e203] &quot;Community portal&quot;
+      listitem &quot;Village pump – Forum for discussions about Wikipedia itself, including policies and technical issues.&quot;
+        link[e204] &quot;Village pump&quot;
+      listitem &quot;Site news – Sources of news about Wikipedia and the broader Wikimedia movement.&quot;
+        link[e205] &quot;Site news&quot;
+      listitem &quot;Teahouse – Ask basic questions about using or editing Wikipedia.&quot;
+        link[e206] &quot;Teahouse&quot;
+      listitem &quot;Help desk – Ask questions about using or editing Wikipedia.&quot;
+        link[e207] &quot;Help desk&quot;
+      listitem &quot;Reference desk – Ask research questions about encyclopedic topics.&quot;
+        link[e208] &quot;Reference desk&quot;
+      listitem &quot;Content portals – A unique way to navigate the encyclopedia.&quot;
+        link[e209] &quot;Content portals&quot;
+    heading &quot;Wikipedia&#x27;s sister projects&quot;
+    paragraph &quot;Wikipedia is written by volunteer editors and hosted by the Wikimedia Foundation , a non-profit organization that also hosts a range of other volunteer projects :&quot;
+      link[e210] &quot;Wikimedia Foundation&quot;
+      link[e211] &quot;projects&quot;
+    list
+      listitem &quot;Commons Free media repository&quot;
+        link[e212]
+        link[e213] &quot;Commons&quot;
+      listitem &quot;MediaWiki Wiki software development&quot;
+        link[e214]
+        link[e215] &quot;MediaWiki&quot;
+      listitem &quot;Meta-Wiki Wikimedia project coordination&quot;
+        img
+        link[e216] &quot;Meta-Wiki&quot;
+      listitem &quot;Wikibooks Free textbooks and manuals&quot;
+        link[e217]
+        link[e218] &quot;Wikibooks&quot;
+      listitem &quot;Wikidata Free knowledge base&quot;
+        img
+        link[e219] &quot;Wikidata&quot;
+      listitem &quot;Wikifunctions Catalog of computer functions&quot;
+        link[e220]
+        link[e221] &quot;Wikifunctions&quot;
+      listitem &quot;Wikiquote Collection of quotations&quot;
+        img
+        link[e222] &quot;Wikiquote&quot;
+      listitem &quot;Wikisource Free-content library&quot;
+        link[e223]
+        link[e224] &quot;Wikisource&quot;
+      listitem &quot;Wikispecies Directory of species&quot;
+        link[e225]
+        link[e226] &quot;Wikispecies&quot;
+      listitem &quot;Wikiversity Free learning tools&quot;
+        link[e227]
+        link[e228] &quot;Wikiversity&quot;
+      listitem &quot;Wikivoyage Free travel guide&quot;
+        link[e229]
+        link[e230] &quot;Wikivoyage&quot;
+      listitem &quot;Wiktionary Dictionary and thesaurus&quot;
+        link[e231]
+        link[e232] &quot;Wiktionary&quot;
+    heading &quot;Wikipedia languages&quot;
+    paragraph &quot;This Wikipedia is written in English . Many other Wikipedias are available ; some of the largest are listed below.&quot;
+      link[e233] &quot;English&quot;
+      link[e234] &quot;other Wikipedias are available&quot;
+    list
+      listitem &quot;1,000,000+ articles العربية Deutsch Español فارسی ‎ Français Italiano Nederlands 日本語 Polski Português Русский Svenska Українська Tiếng Việt 中文&quot;
+        heading &quot;1,000,000+ articles&quot;
+        list
+          listitem &quot;العربية&quot;
+            link[e235] &quot;العربية&quot;
+          listitem &quot;Deutsch&quot;
+            link[e236] &quot;Deutsch&quot;
+          listitem &quot;Español&quot;
+            link[e237] &quot;Español&quot;
+          listitem &quot;فارسی ‎&quot;
+            link[e238] &quot;فارسی&quot;
+          listitem &quot;Français&quot;
+            link[e239] &quot;Français&quot;
+          listitem &quot;Italiano&quot;
+            link[e240] &quot;Italiano&quot;
+          listitem &quot;Nederlands&quot;
+            link[e241] &quot;Nederlands&quot;
+          listitem &quot;日本語&quot;
+            link[e242] &quot;日本語&quot;
+          listitem &quot;Polski&quot;
+            link[e243] &quot;Polski&quot;
+          listitem &quot;Português&quot;
+            link[e244] &quot;Português&quot;
+          listitem &quot;Русский&quot;
+            link[e245] &quot;Русский&quot;
+          listitem &quot;Svenska&quot;
+            link[e246] &quot;Svenska&quot;
+          listitem &quot;Українська&quot;
+            link[e247] &quot;Українська&quot;
+          listitem &quot;Tiếng Việt&quot;
+            link[e248] &quot;Tiếng Việt&quot;
+          listitem &quot;中文&quot;
+            link[e249] &quot;中文&quot;
+      listitem &quot;250,000+ articles Bahasa Indonesia Bahasa Melayu Bân-lâm-gú Български Català Čeština Dansk Eesti Ελληνικά Esperanto Euskara עברית Հայերեն 한국어 Magyar Norsk bokmål Română Simple English Slovenčina Srpski Srpskohrvatski Suomi Türkçe Oʻzbekcha&quot;
+        heading &quot;250,000+ articles&quot;
+        list
+          listitem &quot;Bahasa Indonesia&quot;
+            link[e250] &quot;Bahasa Indonesia&quot;
+          listitem &quot;Bahasa Melayu&quot;
+            link[e251] &quot;Bahasa Melayu&quot;
+          listitem &quot;Bân-lâm-gú&quot;
+            link[e252] &quot;Bân-lâm-gú&quot;
+          listitem &quot;Български&quot;
+            link[e253] &quot;Български&quot;
+          listitem &quot;Català&quot;
+            link[e254] &quot;Català&quot;
+          listitem &quot;Čeština&quot;
+            link[e255] &quot;Čeština&quot;
+          listitem &quot;Dansk&quot;
+            link[e256] &quot;Dansk&quot;
+          listitem &quot;Eesti&quot;
+            link[e257] &quot;Eesti&quot;
+          listitem &quot;Ελληνικά&quot;
+            link[e258] &quot;Ελληνικά&quot;
+          listitem &quot;Esperanto&quot;
+            link[e259] &quot;Esperanto&quot;
+          listitem &quot;Euskara&quot;
+            link[e260] &quot;Euskara&quot;
+          listitem &quot;עברית&quot;
+            link[e261] &quot;עברית&quot;
+          listitem &quot;Հայերեն&quot;
+            link[e262] &quot;Հայերեն&quot;
+          listitem &quot;한국어&quot;
+            link[e263] &quot;한국어&quot;
+          listitem &quot;Magyar&quot;
+            link[e264] &quot;Magyar&quot;
+          listitem &quot;Norsk bokmål&quot;
+            link[e265] &quot;Norsk bokmål&quot;
+          listitem &quot;Română&quot;
+            link[e266] &quot;Română&quot;
+          listitem &quot;Simple English&quot;
+            link[e267] &quot;Simple English&quot;
+          listitem &quot;Slovenčina&quot;
+            link[e268] &quot;Slovenčina&quot;
+          listitem &quot;Srpski&quot;
+            link[e269] &quot;Srpski&quot;
+          listitem &quot;Srpskohrvatski&quot;
+            link[e270] &quot;Srpskohrvatski&quot;
+          listitem &quot;Suomi&quot;
+            link[e271] &quot;Suomi&quot;
+          listitem &quot;Türkçe&quot;
+            link[e272] &quot;Türkçe&quot;
+          listitem &quot;Oʻzbekcha&quot;
+            link[e273] &quot;Oʻzbekcha&quot;
+      listitem &quot;50,000+ articles Asturianu Azərbaycanca বাংলা Bosanski کوردی Frysk Gaeilge Galego Hrvatski ქართული Kurdî Latviešu Lietuvių മലയാളം Македонски မြန်မာဘာသာ Norsk nynorsk ਪੰਜਾਬੀ Shqip Slovenščina ไทย తెలుగు اردو&quot;
+        heading &quot;50,000+ articles&quot;
+        list
+          listitem &quot;Asturianu&quot;
+            link[e274] &quot;Asturianu&quot;
+          listitem &quot;Azərbaycanca&quot;
+            link[e275] &quot;Azərbaycanca&quot;
+          listitem &quot;বাংলা&quot;
+            link[e276] &quot;বাংলা&quot;
+          listitem &quot;Bosanski&quot;
+            link[e277] &quot;Bosanski&quot;
+          listitem &quot;کوردی&quot;
+            link[e278] &quot;کوردی&quot;
+          listitem &quot;Frysk&quot;
+            link[e279] &quot;Frysk&quot;
+          listitem &quot;Gaeilge&quot;
+            link[e280] &quot;Gaeilge&quot;
+          listitem &quot;Galego&quot;
+            link[e281] &quot;Galego&quot;
+          listitem &quot;Hrvatski&quot;
+            link[e282] &quot;Hrvatski&quot;
+          listitem &quot;ქართული&quot;
+            link[e283] &quot;ქართული&quot;
+          listitem &quot;Kurdî&quot;
+            link[e284] &quot;Kurdî&quot;
+          listitem &quot;Latviešu&quot;
+            link[e285] &quot;Latviešu&quot;
+          listitem &quot;Lietuvių&quot;
+            link[e286] &quot;Lietuvių&quot;
+          listitem &quot;മലയാളം&quot;
+            link[e287] &quot;മലയാളം&quot;
+          listitem &quot;Македонски&quot;
+            link[e288] &quot;Македонски&quot;
+          listitem &quot;မြန်မာဘာသာ&quot;
+            link[e289] &quot;မြန်မာဘာသာ&quot;
+          listitem &quot;Norsk nynorsk&quot;
+            link[e290] &quot;Norsk nynorsk&quot;
+          listitem &quot;ਪੰਜਾਬੀ&quot;
+            link[e291] &quot;ਪੰਜਾਬੀ&quot;
+          listitem &quot;Shqip&quot;
+            link[e292] &quot;Shqip&quot;
+          listitem &quot;Slovenščina&quot;
+            link[e293] &quot;Slovenščina&quot;
+          listitem &quot;ไทย&quot;
+            link[e294] &quot;ไทย&quot;
+          listitem &quot;తెలుగు&quot;
+            link[e295] &quot;తెలుగు&quot;
+          listitem &quot;اردو&quot;
+            link[e296] &quot;اردو&quot;
+  link[e297] &quot;https://en.wikipedia.org/w/index.php?title=Main_Page&amp;oldid=1358980925&quot;
+  checkbox[e298] &quot;346 languages&quot;
+  label &quot;346 languages&quot;
+  list
+    listitem &quot;Аԥсшәа&quot;
+      link[e299] &quot;Аԥсшәа&quot;
+    listitem &quot;Acèh&quot;
+      link[e300] &quot;Acèh&quot;
+    listitem &quot;Адыгабзэ&quot;
+      link[e301] &quot;Адыгабзэ&quot;
+    listitem &quot;Afrikaans&quot;
+      link[e302] &quot;Afrikaans&quot;
+    listitem &quot;Alemannisch&quot;
+      link[e303] &quot;Alemannisch&quot;
+    listitem &quot;Алтай тил&quot;
+      link[e304] &quot;Алтай тил&quot;
+    listitem &quot;አማርኛ&quot;
+      link[e305] &quot;አማርኛ&quot;
+    listitem &quot;Pangcah&quot;
+      link[e306] &quot;Pangcah&quot;
+    listitem &quot;Aragonés&quot;
+      link[e307] &quot;Aragonés&quot;
+    listitem &quot;Ænglisc&quot;
+      link[e308] &quot;Ænglisc&quot;
+    listitem &quot;Obolo&quot;
+      link[e309] &quot;Obolo&quot;
+    listitem &quot;अंगिका&quot;
+      link[e310] &quot;अंगिका&quot;
+    listitem &quot;العربية&quot;
+      link[e311] &quot;العربية&quot;
+    listitem &quot;ܐܪܡܝܐ&quot;
+      link[e312] &quot;ܐܪܡܝܐ&quot;
+    listitem &quot;الدارجة&quot;
+      link[e313] &quot;الدارجة&quot;
+    listitem &quot;مصرى&quot;
+      link[e314] &quot;مصرى&quot;
+    listitem &quot;অসমীয়া&quot;
+      link[e315] &quot;অসমীয়া&quot;
+    listitem &quot;Asturianu&quot;
+      link[e316] &quot;Asturianu&quot;
+    listitem &quot;Atikamekw&quot;
+      link[e317] &quot;Atikamekw&quot;
+    listitem &quot;Авар&quot;
+      link[e318] &quot;Авар&quot;
+    listitem &quot;Kotava&quot;
+      link[e319] &quot;Kotava&quot;
+    listitem &quot;अवधी&quot;
+      link[e320] &quot;अवधी&quot;
+    listitem &quot;Aymar aru&quot;
+      link[e321] &quot;Aymar aru&quot;
+    listitem &quot;Azərbaycanca&quot;
+      link[e322] &quot;Azərbaycanca&quot;
+    listitem &quot;تۆرکجه&quot;
+      link[e323] &quot;تۆرکجه&quot;
+    listitem &quot;Башҡортса&quot;
+      link[e324] &quot;Башҡортса&quot;
+    listitem &quot;Basa Bali&quot;
+      link[e325] &quot;Basa Bali&quot;
+    listitem &quot;Boarisch&quot;
+      link[e326] &quot;Boarisch&quot;
+    listitem &quot;Žemaitėška&quot;
+      link[e327] &quot;Žemaitėška&quot;
+    listitem &quot;Batak Toba&quot;
+      link[e328] &quot;Batak Toba&quot;
+    listitem &quot;Bikol Central&quot;
+      link[e329] &quot;Bikol Central&quot;
+    listitem &quot;Bajau Sama&quot;
+      link[e330] &quot;Bajau Sama&quot;
+    listitem &quot;Беларуская (тарашкевіца)&quot;
+      link[e331] &quot;Беларуская (тарашкевіца)&quot;
+    listitem &quot;Беларуская&quot;
+      link[e332] &quot;Беларуская&quot;
+    listitem &quot;Betawi&quot;
+      link[e333] &quot;Betawi&quot;
+    listitem &quot;Български&quot;
+      link[e334] &quot;Български&quot;
+    listitem &quot;भोजपुरी&quot;
+      link[e335] &quot;भोजपुरी&quot;
+    listitem &quot;Bislama&quot;
+      link[e336] &quot;Bislama&quot;
+    listitem &quot;Banjar&quot;
+      link[e337] &quot;Banjar&quot;
+    listitem &quot;ပအိုဝ်ႏဘာႏသာႏ&quot;
+      link[e338] &quot;ပအိုဝ်ႏဘာႏသာႏ&quot;
+    listitem &quot;Bamanankan&quot;
+      link[e339] &quot;Bamanankan&quot;
+    listitem &quot;বাংলা&quot;
+      link[e340] &quot;বাংলা&quot;
+    listitem &quot;བོད་ཡིག&quot;
+      link[e341] &quot;བོད་ཡིག&quot;
+    listitem &quot;বিষ্ণুপ্রিয়া মণিপুরী&quot;
+      link[e342] &quot;বিষ্ণুপ্রিয়া মণিপুরী&quot;
+    listitem &quot;Brezhoneg&quot;
+      link[e343] &quot;Brezhoneg&quot;
+    listitem &quot;Bosanski&quot;
+      link[e344] &quot;Bosanski&quot;
+    listitem &quot;Batak Mandailing&quot;
+      link[e345] &quot;Batak Mandailing&quot;
+    listitem &quot;Basa Ugi&quot;
+      link[e346] &quot;Basa Ugi&quot;
+    listitem &quot;Буряад&quot;
+      link[e347] &quot;Буряад&quot;
+    listitem &quot;Català&quot;
+      link[e348] &quot;Català&quot;
+    listitem &quot;Chavacano de Zamboanga&quot;
+      link[e349] &quot;Chavacano de Zamboanga&quot;
+    listitem &quot;閩東語 / Mìng-dĕ̤ng-ngṳ̄&quot;
+      link[e350] &quot;閩東語 / Mìng-dĕ̤ng-ngṳ̄&quot;
+    listitem &quot;Нохчийн&quot;
+      link[e351] &quot;Нохчийн&quot;
+    listitem &quot;Cebuano&quot;
+      link[e352] &quot;Cebuano&quot;
+    listitem &quot;Chamoru&quot;
+      link[e353] &quot;Chamoru&quot;
+    listitem &quot;ᏣᎳᎩ&quot;
+      link[e354] &quot;ᏣᎳᎩ&quot;
+    listitem &quot;Tsetsêhestâhese&quot;
+      link[e355] &quot;Tsetsêhestâhese&quot;
+    listitem &quot;کوردی&quot;
+      link[e356] &quot;کوردی&quot;
+    listitem &quot;Corsu&quot;
+      link[e357] &quot;Corsu&quot;
+    listitem &quot;Nēhiyawēwin / ᓀᐦᐃᔭᐍᐏᐣ&quot;
+      link[e358] &quot;Nēhiyawēwin / ᓀᐦᐃᔭᐍᐏᐣ&quot;
+    listitem &quot;Qırımtatarca&quot;
+      link[e359] &quot;Qırımtatarca&quot;
+    listitem &quot;Čeština&quot;
+      link[e360] &quot;Čeština&quot;
+    listitem &quot;Kaszëbsczi&quot;
+      link[e361] &quot;Kaszëbsczi&quot;
+    listitem &quot;Словѣньскъ / ⰔⰎⰑⰂⰡⰐⰠⰔⰍⰟ&quot;
+      link[e362] &quot;Словѣньскъ / ⰔⰎⰑⰂⰡⰐⰠⰔⰍⰟ&quot;
+    listitem &quot;Чӑвашла&quot;
+      link[e363] &quot;Чӑвашла&quot;
+    listitem &quot;Cymraeg&quot;
+      link[e364] &quot;Cymraeg&quot;
+    listitem &quot;Dansk&quot;
+      link[e365] &quot;Dansk&quot;
+    listitem &quot;Dagbanli&quot;
+      link[e366] &quot;Dagbanli&quot;
+    listitem &quot;Deutsch&quot;
+      link[e367] &quot;Deutsch&quot;
+    listitem &quot;Dagaare&quot;
+      link[e368] &quot;Dagaare&quot;
+    listitem &quot;Thuɔŋjäŋ&quot;
+      link[e369] &quot;Thuɔŋjäŋ&quot;
+    listitem &quot;Zazaki&quot;
+      link[e370] &quot;Zazaki&quot;
+    listitem &quot;Dolnoserbski&quot;
+      link[e371] &quot;Dolnoserbski&quot;
+    listitem &quot;Kadazandusun&quot;
+      link[e372] &quot;Kadazandusun&quot;
+    listitem &quot;डोटेली&quot;
+      link[e373] &quot;डोटेली&quot;
+    listitem &quot;ދިވެހިބަސް&quot;
+      link[e374] &quot;ދިވެހިބަސް&quot;
+    listitem &quot;ཇོང་ཁ&quot;
+      link[e375] &quot;ཇོང་ཁ&quot;
+    listitem &quot;Eʋegbe&quot;
+      link[e376] &quot;Eʋegbe&quot;
+    listitem &quot;Ελληνικά&quot;
+      link[e377] &quot;Ελληνικά&quot;
+    listitem &quot;Emiliàn e rumagnòl&quot;
+      link[e378] &quot;Emiliàn e rumagnòl&quot;
+    listitem &quot;Esperanto&quot;
+      link[e379] &quot;Esperanto&quot;
+    listitem &quot;Español&quot;
+      link[e380] &quot;Español&quot;
+    listitem &quot;Eesti&quot;
+      link[e381] &quot;Eesti&quot;
+    listitem &quot;Euskara&quot;
+      link[e382] &quot;Euskara&quot;
+    listitem &quot;Estremeñu&quot;
+      link[e383] &quot;Estremeñu&quot;
+    listitem &quot;فارسی&quot;
+      link[e384] &quot;فارسی&quot;
+    listitem &quot;Mfantse&quot;
+      link[e385] &quot;Mfantse&quot;
+    listitem &quot;Fulfulde&quot;
+      link[e386] &quot;Fulfulde&quot;
+    listitem &quot;Suomi&quot;
+      link[e387] &quot;Suomi&quot;
+    listitem &quot;Võro&quot;
+      link[e388] &quot;Võro&quot;
+    listitem &quot;Na Vosa Vakaviti&quot;
+      link[e389] &quot;Na Vosa Vakaviti&quot;
+    listitem &quot;Føroyskt&quot;
+      link[e390] &quot;Føroyskt&quot;
+    listitem &quot;Fɔ̀ngbè&quot;
+      link[e391] &quot;Fɔ̀ngbè&quot;
+    listitem &quot;Français&quot;
+      link[e392] &quot;Français&quot;
+    listitem &quot;Arpetan&quot;
+      link[e393] &quot;Arpetan&quot;
+    listitem &quot;Nordfriisk&quot;
+      link[e394] &quot;Nordfriisk&quot;
+    listitem &quot;Furlan&quot;
+      link[e395] &quot;Furlan&quot;
+    listitem &quot;Frysk&quot;
+      link[e396] &quot;Frysk&quot;
+    listitem &quot;Gaeilge&quot;
+      link[e397] &quot;Gaeilge&quot;
+    listitem &quot;Gagauz&quot;
+      link[e398] &quot;Gagauz&quot;
+    listitem &quot;贛語&quot;
+      link[e399] &quot;贛語&quot;
+    listitem &quot;Kriyòl gwiyannen&quot;
+      link[e400] &quot;Kriyòl gwiyannen&quot;
+    listitem &quot;Gàidhlig&quot;
+      link[e401] &quot;Gàidhlig&quot;
+    listitem &quot;Galego&quot;
+      link[e402] &quot;Galego&quot;
+    listitem &quot;گیلکی&quot;
+      link[e403] &quot;گیلکی&quot;
+    listitem &quot;Avañe&#x27;ẽ&quot;
+      link[e404] &quot;Avañe&#x27;ẽ&quot;
+    listitem &quot;गोंयची कोंकणी / Gõychi Konknni&quot;
+      link[e405] &quot;गोंयची कोंकणी / Gõychi Konknni&quot;
+    listitem &quot;Bahasa Hulontalo&quot;
+      link[e406] &quot;Bahasa Hulontalo&quot;
+    listitem &quot;𐌲𐌿𐍄𐌹𐍃𐌺&quot;
+      link[e407] &quot;𐌲𐌿𐍄𐌹𐍃𐌺&quot;
+    listitem &quot;Ghanaian Pidgin&quot;
+      link[e408] &quot;Ghanaian Pidgin&quot;
+    listitem &quot;ગુજરાતી&quot;
+      link[e409] &quot;ગુજરાતી&quot;
+    listitem &quot;Wayuunaiki&quot;
+      link[e410] &quot;Wayuunaiki&quot;
+    listitem &quot;Farefare&quot;
+      link[e411] &quot;Farefare&quot;
+    listitem &quot;Gungbe&quot;
+      link[e412] &quot;Gungbe&quot;
+    listitem &quot;Gaelg&quot;
+      link[e413] &quot;Gaelg&quot;
+    listitem &quot;Hausa&quot;
+      link[e414] &quot;Hausa&quot;
+    listitem &quot;客家語 / Hak-kâ-ngî&quot;
+      link[e415] &quot;客家語 / Hak-kâ-ngî&quot;
+    listitem &quot;Hawaiʻi&quot;
+      link[e416] &quot;Hawaiʻi&quot;
+    listitem &quot;עברית&quot;
+      link[e417] &quot;עברית&quot;
+    listitem &quot;हिन्दी&quot;
+      link[e418] &quot;हिन्दी&quot;
+    listitem &quot;Fiji Hindi&quot;
+      link[e419] &quot;Fiji Hindi&quot;
+    listitem &quot;Hrvatski&quot;
+      link[e420] &quot;Hrvatski&quot;
+    listitem &quot;Hornjoserbsce&quot;
+      link[e421] &quot;Hornjoserbsce&quot;
+    listitem &quot;Kreyòl ayisyen&quot;
+      link[e422] &quot;Kreyòl ayisyen&quot;
+    listitem &quot;Magyar&quot;
+      link[e423] &quot;Magyar&quot;
+    listitem &quot;Հայերեն&quot;
+      link[e424] &quot;Հայերեն&quot;
+    listitem &quot;Արեւմտահայերէն&quot;
+      link[e425] &quot;Արեւմտահայերէն&quot;
+    listitem &quot;Interlingua&quot;
+      link[e426] &quot;Interlingua&quot;
+    listitem &quot;Jaku Iban&quot;
+      link[e427] &quot;Jaku Iban&quot;
+    listitem &quot;Bahasa Indonesia&quot;
+      link[e428] &quot;Bahasa Indonesia&quot;
+    listitem &quot;Interlingue&quot;
+      link[e429] &quot;Interlingue&quot;
+    listitem &quot;Igbo&quot;
+      link[e430] &quot;Igbo&quot;
+    listitem &quot;Igala&quot;
+      link[e431] &quot;Igala&quot;
+    listitem &quot;Iñupiatun&quot;
+      link[e432] &quot;Iñupiatun&quot;
+    listitem &quot;Ilokano&quot;
+      link[e433] &quot;Ilokano&quot;
+    listitem &quot;ГӀалгӀай&quot;
+      link[e434] &quot;ГӀалгӀай&quot;
+    listitem &quot;Ido&quot;
+      link[e435] &quot;Ido&quot;
+    listitem &quot;Íslenska&quot;
+      link[e436] &quot;Íslenska&quot;
+    listitem &quot;Italiano&quot;
+      link[e437] &quot;Italiano&quot;
+    listitem &quot;ᐃᓄᒃᑎᑐᑦ / inuktitut&quot;
+      link[e438] &quot;ᐃᓄᒃᑎᑐᑦ / inuktitut&quot;
+    listitem &quot;日本語&quot;
+      link[e439] &quot;日本語&quot;
+    listitem &quot;Patois&quot;
+      link[e440] &quot;Patois&quot;
+    listitem &quot;La .lojban.&quot;
+      link[e441] &quot;La .lojban.&quot;
+    listitem &quot;Jawa&quot;
+      link[e442] &quot;Jawa&quot;
+    listitem &quot;ქართული&quot;
+      link[e443] &quot;ქართული&quot;
+    listitem &quot;Qaraqalpaqsha&quot;
+      link[e444] &quot;Qaraqalpaqsha&quot;
+    listitem &quot;Taqbaylit&quot;
+      link[e445] &quot;Taqbaylit&quot;
+    listitem &quot;Karai-karai&quot;
+      link[e446] &quot;Karai-karai&quot;
+    listitem &quot;Jju&quot;
+      link[e447] &quot;Jju&quot;
+    listitem &quot;Адыгэбзэ&quot;
+      link[e448] &quot;Адыгэбзэ&quot;
+    listitem &quot;Kabɩyɛ&quot;
+      link[e449] &quot;Kabɩyɛ&quot;
+    listitem &quot;Tyap&quot;
+      link[e450] &quot;Tyap&quot;
+    listitem &quot;Kongo&quot;
+      link[e451] &quot;Kongo&quot;
+    listitem &quot;Kumoring&quot;
+      link[e452] &quot;Kumoring&quot;
+    listitem &quot;Gĩkũyũ&quot;
+      link[e453] &quot;Gĩkũyũ&quot;
+    listitem &quot;Қазақша&quot;
+      link[e454] &quot;Қазақша&quot;
+    listitem &quot;Kalaallisut&quot;
+      link[e455] &quot;Kalaallisut&quot;
+    listitem &quot;ភាសាខ្មែរ&quot;
+      link[e456] &quot;ភាសាខ្មែរ&quot;
+    listitem &quot;ಕನ್ನಡ&quot;
+      link[e457] &quot;ಕನ್ನಡ&quot;
+    listitem &quot;Yerwa Kanuri&quot;
+      link[e458] &quot;Yerwa Kanuri&quot;
+    listitem &quot;한국어&quot;
+      link[e459] &quot;한국어&quot;
+    listitem &quot;Перем коми&quot;
+      link[e460] &quot;Перем коми&quot;
+    listitem &quot;Къарачай-малкъар&quot;
+      link[e461] &quot;Къарачай-малкъар&quot;
+    listitem &quot;کٲشُر&quot;
+      link[e462] &quot;کٲشُر&quot;
+    listitem &quot;Ripoarisch&quot;
+      link[e463] &quot;Ripoarisch&quot;
+    listitem &quot;Kurdî&quot;
+      link[e464] &quot;Kurdî&quot;
+    listitem &quot;Kʋsaal&quot;
+      link[e465] &quot;Kʋsaal&quot;
+    listitem &quot;Коми&quot;
+      link[e466] &quot;Коми&quot;
+    listitem &quot;Kernowek&quot;
+      link[e467] &quot;Kernowek&quot;
+    listitem &quot;Кыргызча&quot;
+      link[e468] &quot;Кыргызча&quot;
+    listitem &quot;Latina&quot;
+      link[e469] &quot;Latina&quot;
+    listitem &quot;Ladino&quot;
+      link[e470] &quot;Ladino&quot;
+    listitem &quot;Lëtzebuergesch&quot;
+      link[e471] &quot;Lëtzebuergesch&quot;
+    listitem &quot;Лакку&quot;
+      link[e472] &quot;Лакку&quot;
+    listitem &quot;Лезги&quot;
+      link[e473] &quot;Лезги&quot;
+    listitem &quot;Lingua Franca Nova&quot;
+      link[e474] &quot;Lingua Franca Nova&quot;
+    listitem &quot;Luganda&quot;
+      link[e475] &quot;Luganda&quot;
+    listitem &quot;Limburgs&quot;
+      link[e476] &quot;Limburgs&quot;
+    listitem &quot;Ligure&quot;
+      link[e477] &quot;Ligure&quot;
+    listitem &quot;Ladin&quot;
+      link[e478] &quot;Ladin&quot;
+    listitem &quot;Lombard&quot;
+      link[e479] &quot;Lombard&quot;
+    listitem &quot;Lingála&quot;
+      link[e480] &quot;Lingála&quot;
+    listitem &quot;ລາວ&quot;
+      link[e481] &quot;ລາວ&quot;
+    listitem &quot;Lietuvių&quot;
+      link[e482] &quot;Lietuvių&quot;
+    listitem &quot;Latgaļu&quot;
+      link[e483] &quot;Latgaļu&quot;
+    listitem &quot;Latviešu&quot;
+      link[e484] &quot;Latviešu&quot;
+    listitem &quot;Madhurâ&quot;
+      link[e485] &quot;Madhurâ&quot;
+    listitem &quot;मैथिली&quot;
+      link[e486] &quot;मैथिली&quot;
+    listitem &quot;Basa Banyumasan&quot;
+      link[e487] &quot;Basa Banyumasan&quot;
+    listitem &quot;Мокшень&quot;
+      link[e488] &quot;Мокшень&quot;
+    listitem &quot;Malagasy&quot;
+      link[e489] &quot;Malagasy&quot;
+    listitem &quot;Олык марий&quot;
+      link[e490] &quot;Олык марий&quot;
+    listitem &quot;Māori&quot;
+      link[e491] &quot;Māori&quot;
+    listitem &quot;Minangkabau&quot;
+      link[e492] &quot;Minangkabau&quot;
+    listitem &quot;Македонски&quot;
+      link[e493] &quot;Македонски&quot;
+    listitem &quot;മലയാളം&quot;
+      link[e494] &quot;മലയാളം&quot;
+    listitem &quot;Монгол&quot;
+      link[e495] &quot;Монгол&quot;
+    listitem &quot;ꯃꯤꯇꯩ ꯂꯣꯟ&quot;
+      link[e496] &quot;ꯃꯤꯇꯩ ꯂꯣꯟ&quot;
+    listitem &quot;ဘာသာမန်&quot;
+      link[e497] &quot;ဘာသာမန်&quot;
+    listitem &quot;Moore&quot;
+      link[e498] &quot;Moore&quot;
+    listitem &quot;मराठी&quot;
+      link[e499] &quot;मराठी&quot;
+    listitem &quot;Кырык мары&quot;
+      link[e500] &quot;Кырык мары&quot;
+    listitem &quot;Bahasa Melayu&quot;
+      link[e501] &quot;Bahasa Melayu&quot;
+    listitem &quot;Malti&quot;
+      link[e502] &quot;Malti&quot;
+    listitem &quot;Mirandés&quot;
+      link[e503] &quot;Mirandés&quot;
+    listitem &quot;မြန်မာဘာသာ&quot;
+      link[e504] &quot;မြန်မာဘာသာ&quot;
+    listitem &quot;Эрзянь&quot;
+      link[e505] &quot;Эрзянь&quot;
+    listitem &quot;مازِرونی&quot;
+      link[e506] &quot;مازِرونی&quot;
+    listitem &quot;Nāhuatl&quot;
+      link[e507] &quot;Nāhuatl&quot;
+    listitem &quot;Napulitano&quot;
+      link[e508] &quot;Napulitano&quot;
+    listitem &quot;Nedersaksies&quot;
+      link[e509] &quot;Nedersaksies&quot;
+    listitem &quot;Plattdüütsch&quot;
+      link[e510] &quot;Plattdüütsch&quot;
+    listitem &quot;नेपाली&quot;
+      link[e511] &quot;नेपाली&quot;
+    listitem &quot;नेपाल भाषा&quot;
+      link[e512] &quot;नेपाल भाषा&quot;
+    listitem &quot;Li Niha&quot;
+      link[e513] &quot;Li Niha&quot;
+    listitem &quot;Nederlands&quot;
+      link[e514] &quot;Nederlands&quot;
+    listitem &quot;Norsk nynorsk&quot;
+      link[e515] &quot;Norsk nynorsk&quot;
+    listitem &quot;Norsk bokmål&quot;
+      link[e516] &quot;Norsk bokmål&quot;
+    listitem &quot;Novial&quot;
+      link[e517] &quot;Novial&quot;
+    listitem &quot;ߒߞߏ&quot;
+      link[e518] &quot;ߒߞߏ&quot;
+    listitem &quot;IsiNdebele seSewula&quot;
+      link[e519] &quot;IsiNdebele seSewula&quot;
+    listitem &quot;Nouormand&quot;
+      link[e520] &quot;Nouormand&quot;
+    listitem &quot;Sesotho sa Leboa&quot;
+      link[e521] &quot;Sesotho sa Leboa&quot;
+    listitem &quot;Nupe&quot;
+      link[e522] &quot;Nupe&quot;
+    listitem &quot;Diné bizaad&quot;
+      link[e523] &quot;Diné bizaad&quot;
+    listitem &quot;Chi-Chewa&quot;
+      link[e524] &quot;Chi-Chewa&quot;
+    listitem &quot;Occitan&quot;
+      link[e525] &quot;Occitan&quot;
+    listitem &quot;Livvinkarjala&quot;
+      link[e526] &quot;Livvinkarjala&quot;
+    listitem &quot;Oromoo&quot;
+      link[e527] &quot;Oromoo&quot;
+    listitem &quot;ଓଡ଼ିଆ&quot;
+      link[e528] &quot;ଓଡ଼ିଆ&quot;
+    listitem &quot;Ирон&quot;
+      link[e529] &quot;Ирон&quot;
+    listitem &quot;ਪੰਜਾਬੀ&quot;
+      link[e530] &quot;ਪੰਜਾਬੀ&quot;
+    listitem &quot;Pangasinan&quot;
+      link[e531] &quot;Pangasinan&quot;
+    listitem &quot;Kapampangan&quot;
+      link[e532] &quot;Kapampangan&quot;
+    listitem &quot;Papiamentu&quot;
+      link[e533] &quot;Papiamentu&quot;
+    listitem &quot;Picard&quot;
+      link[e534] &quot;Picard&quot;
+    listitem &quot;Naijá&quot;
+      link[e535] &quot;Naijá&quot;
+    listitem &quot;Deitsch&quot;
+      link[e536] &quot;Deitsch&quot;
+    listitem &quot;Pälzisch&quot;
+      link[e537] &quot;Pälzisch&quot;
+    listitem &quot;पालि&quot;
+      link[e538] &quot;पालि&quot;
+    listitem &quot;Polski&quot;
+      link[e539] &quot;Polski&quot;
+    listitem &quot;Piemontèis&quot;
+      link[e540] &quot;Piemontèis&quot;
+    listitem &quot;پنجابی&quot;
+      link[e541] &quot;پنجابی&quot;
+    listitem &quot;Ποντιακά&quot;
+      link[e542] &quot;Ποντιακά&quot;
+    listitem &quot;Nawat&quot;
+      link[e543] &quot;Nawat&quot;
+    listitem &quot;پښتو&quot;
+      link[e544] &quot;پښتو&quot;
+    listitem &quot;Português&quot;
+      link[e545] &quot;Português&quot;
+    listitem &quot;Pinayuanan&quot;
+      link[e546] &quot;Pinayuanan&quot;
+    listitem &quot;Runa Simi&quot;
+      link[e547] &quot;Runa Simi&quot;
+    listitem &quot;ရခိုင်&quot;
+      link[e548] &quot;ရခိုင်&quot;
+    listitem &quot;Rumantsch&quot;
+      link[e549] &quot;Rumantsch&quot;
+    listitem &quot;Romani čhib&quot;
+      link[e550] &quot;Romani čhib&quot;
+    listitem &quot;Ikirundi&quot;
+      link[e551] &quot;Ikirundi&quot;
+    listitem &quot;Română&quot;
+      link[e552] &quot;Română&quot;
+    listitem &quot;Armãneashti&quot;
+      link[e553] &quot;Armãneashti&quot;
+    listitem &quot;Tarandíne&quot;
+      link[e554] &quot;Tarandíne&quot;
+    listitem &quot;Руски&quot;
+      link[e555] &quot;Руски&quot;
+    listitem &quot;Русский&quot;
+      link[e556] &quot;Русский&quot;
+    listitem &quot;Русиньскый&quot;
+      link[e557] &quot;Русиньскый&quot;
+    listitem &quot;Ikinyarwanda&quot;
+      link[e558] &quot;Ikinyarwanda&quot;
+    listitem &quot;संस्कृतम्&quot;
+      link[e559] &quot;संस्कृतम्&quot;
+    listitem &quot;Саха тыла&quot;
+      link[e560] &quot;Саха тыла&quot;
+    listitem &quot;ᱥᱟᱱᱛᱟᱲᱤ&quot;
+      link[e561] &quot;ᱥᱟᱱᱛᱟᱲᱤ&quot;
+    listitem &quot;Sardu&quot;
+      link[e562] &quot;Sardu&quot;
+    listitem &quot;Sicilianu&quot;
+      link[e563] &quot;Sicilianu&quot;
+    listitem &quot;Scots&quot;
+      link[e564] &quot;Scots&quot;
+    listitem &quot;سنڌي&quot;
+      link[e565] &quot;سنڌي&quot;
+    listitem &quot;Davvisámegiella&quot;
+      link[e566] &quot;Davvisámegiella&quot;
+    listitem &quot;Sängö&quot;
+      link[e567] &quot;Sängö&quot;
+    listitem &quot;Srpskohrvatski / српскохрватски&quot;
+      link[e568] &quot;Srpskohrvatski / српскохрватски&quot;
+    listitem &quot;Taclḥit&quot;
+      link[e569] &quot;Taclḥit&quot;
+    listitem &quot;တႆး&quot;
+      link[e570] &quot;တႆး&quot;
+    listitem &quot;සිංහල&quot;
+      link[e571] &quot;සිංහල&quot;
+    listitem &quot;Simple English&quot;
+      link[e572] &quot;Simple English&quot;
+    listitem &quot;Slovenčina&quot;
+      link[e573] &quot;Slovenčina&quot;
+    listitem &quot;سرائیکی&quot;
+      link[e574] &quot;سرائیکی&quot;
+    listitem &quot;Slovenščina&quot;
+      link[e575] &quot;Slovenščina&quot;
+    listitem &quot;Gagana Samoa&quot;
+      link[e576] &quot;Gagana Samoa&quot;
+    listitem &quot;Anarâškielâ&quot;
+      link[e577] &quot;Anarâškielâ&quot;
+    listitem &quot;ChiShona&quot;
+      link[e578] &quot;ChiShona&quot;
+    listitem &quot;Soomaaliga&quot;
+      link[e579] &quot;Soomaaliga&quot;
+    listitem &quot;Shqip&quot;
+      link[e580] &quot;Shqip&quot;
+    listitem &quot;Српски / srpski&quot;
+      link[e581] &quot;Српски / srpski&quot;
+    listitem &quot;Sranantongo&quot;
+      link[e582] &quot;Sranantongo&quot;
+    listitem &quot;SiSwati&quot;
+      link[e583] &quot;SiSwati&quot;
+    listitem &quot;Sesotho&quot;
+      link[e584] &quot;Sesotho&quot;
+    listitem &quot;Seeltersk&quot;
+      link[e585] &quot;Seeltersk&quot;
+    listitem &quot;Sunda&quot;
+      link[e586] &quot;Sunda&quot;
+    listitem &quot;Svenska&quot;
+      link[e587] &quot;Svenska&quot;
+    listitem &quot;Kiswahili&quot;
+      link[e588] &quot;Kiswahili&quot;
+    listitem &quot;ꠍꠤꠟꠐꠤ&quot;
+      link[e589] &quot;ꠍꠤꠟꠐꠤ&quot;
+    listitem &quot;Ślůnski&quot;
+      link[e590] &quot;Ślůnski&quot;
+    listitem &quot;Sakizaya&quot;
+      link[e591] &quot;Sakizaya&quot;
+    listitem &quot;தமிழ்&quot;
+      link[e592] &quot;தமிழ்&quot;
+    listitem &quot;Tayal&quot;
+      link[e593] &quot;Tayal&quot;
+    listitem &quot;ತುಳು&quot;
+      link[e594] &quot;ತುಳು&quot;
+    listitem &quot;ᥖᥭᥰ ᥖᥬᥲ ᥑᥨᥒᥰ&quot;
+      link[e595] &quot;ᥖᥭᥰ ᥖᥬᥲ ᥑᥨᥒᥰ&quot;
+    listitem &quot;తెలుగు&quot;
+      link[e596] &quot;తెలుగు&quot;
+    listitem &quot;Tetun&quot;
+      link[e597] &quot;Tetun&quot;
+    listitem &quot;Тоҷикӣ&quot;
+      link[e598] &quot;Тоҷикӣ&quot;
+    listitem &quot;ไทย&quot;
+      link[e599] &quot;ไทย&quot;
+    listitem &quot;ትግርኛ&quot;
+      link[e600] &quot;ትግርኛ&quot;
+    listitem &quot;ትግሬ&quot;
+      link[e601] &quot;ትግሬ&quot;
+    listitem &quot;Türkmençe&quot;
+      link[e602] &quot;Türkmençe&quot;
+    listitem &quot;Tagalog&quot;
+      link[e603] &quot;Tagalog&quot;
+    listitem &quot;Tolışi&quot;
+      link[e604] &quot;Tolışi&quot;
+    listitem &quot;Setswana&quot;
+      link[e605] &quot;Setswana&quot;
+    listitem &quot;Lea faka-Tonga&quot;
+      link[e606] &quot;Lea faka-Tonga&quot;
+    listitem &quot;Toki pona&quot;
+      link[e607] &quot;Toki pona&quot;
+    listitem &quot;Tok Pisin&quot;
+      link[e608] &quot;Tok Pisin&quot;
+    listitem &quot;Türkçe&quot;
+      link[e609] &quot;Türkçe&quot;
+    listitem &quot;Seediq&quot;
+      link[e610] &quot;Seediq&quot;
+    listitem &quot;Xitsonga&quot;
+      link[e611] &quot;Xitsonga&quot;
+    listitem &quot;Татарча / tatarça&quot;
+      link[e612] &quot;Татарча / tatarça&quot;
+    listitem &quot;ChiTumbuka&quot;
+      link[e613] &quot;ChiTumbuka&quot;
+    listitem &quot;Twi&quot;
+      link[e614] &quot;Twi&quot;
+    listitem &quot;Reo tahiti&quot;
+      link[e615] &quot;Reo tahiti&quot;
+    listitem &quot;Тыва дыл&quot;
+      link[e616] &quot;Тыва дыл&quot;
+    listitem &quot;Удмурт&quot;
+      link[e617] &quot;Удмурт&quot;
+    listitem &quot;ئۇيغۇرچە / Uyghurche&quot;
+      link[e618] &quot;ئۇيغۇرچە / Uyghurche&quot;
+    listitem &quot;Українська&quot;
+      link[e619] &quot;Українська&quot;
+    listitem &quot;اردو&quot;
+      link[e620] &quot;اردو&quot;
+    listitem &quot;Oʻzbekcha / ўзбекча&quot;
+      link[e621] &quot;Oʻzbekcha / ўзбекча&quot;
+    listitem &quot;Tshivenda&quot;
+      link[e622] &quot;Tshivenda&quot;
+    listitem &quot;Vèneto&quot;
+      link[e623] &quot;Vèneto&quot;
+    listitem &quot;Vepsän kel’&quot;
+      link[e624] &quot;Vepsän kel’&quot;
+    listitem &quot;Tiếng Việt&quot;
+      link[e625] &quot;Tiếng Việt&quot;
+    listitem &quot;West-Vlams&quot;
+      link[e626] &quot;West-Vlams&quot;
+    listitem &quot;Volapük&quot;
+      link[e627] &quot;Volapük&quot;
+    listitem &quot;Walon&quot;
+      link[e628] &quot;Walon&quot;
+    listitem &quot;Winaray&quot;
+      link[e629] &quot;Winaray&quot;
+    listitem &quot;Wolof&quot;
+      link[e630] &quot;Wolof&quot;
+    listitem &quot;吴语&quot;
+      link[e631] &quot;吴语&quot;
+    listitem &quot;Хальмг&quot;
+      link[e632] &quot;Хальмг&quot;
+    listitem &quot;IsiXhosa&quot;
+      link[e633] &quot;IsiXhosa&quot;
+    listitem &quot;მარგალური&quot;
+      link[e634] &quot;მარგალური&quot;
+    listitem &quot;ייִדיש&quot;
+      link[e635] &quot;ייִדיש&quot;
+    listitem &quot;Yorùbá&quot;
+      link[e636] &quot;Yorùbá&quot;
+    listitem &quot;Vahcuengh&quot;
+      link[e637] &quot;Vahcuengh&quot;
+    listitem &quot;Zeêuws&quot;
+      link[e638] &quot;Zeêuws&quot;
+    listitem &quot;ⵜⴰⵎⴰⵣⵉⵖⵜ ⵜⴰⵏⴰⵡⴰⵢⵜ&quot;
+      link[e639] &quot;ⵜⴰⵎⴰⵣⵉⵖⵜ ⵜⴰⵏⴰⵡⴰⵢⵜ&quot;
+    listitem &quot;文言&quot;
+      link[e640] &quot;文言&quot;
+    listitem &quot;閩南語 / Bân-lâm-gí&quot;
+      link[e641] &quot;閩南語 / Bân-lâm-gí&quot;
+    listitem &quot;粵語&quot;
+      link[e642] &quot;粵語&quot;
+    listitem &quot;中文&quot;
+      link[e643] &quot;中文&quot;
+    listitem &quot;IsiZulu&quot;
+      link[e644] &quot;IsiZulu&quot;
+  link[e645] &quot;Edit links&quot;
+contentinfo
+  list
+    listitem &quot;This page was last edited on 12 June 2026, at 07:37 (UTC) .&quot;
+    listitem &quot;Page was rendered with Parsoid .&quot;
+      link[e646] &quot;Parsoid&quot;
+    listitem &quot;Text is available under the Creative Commons Attribution-ShareAlike 4.0 License ; additional terms may apply. By using this site, you agree to the Terms of Use and Privacy Policy . Wikipedia® is a registered trademark of the Wikimedia Foundation, Inc. , a non-profit organization.&quot;
+      link[e647] &quot;Creative Commons Attribution-ShareAlike 4.0 License&quot;
+      link[e648] &quot;Terms of Use&quot;
+      link[e649] &quot;Privacy Policy&quot;
+      link[e650] &quot;Wikimedia Foundation, Inc.&quot;
+  list
+    listitem &quot;Privacy policy&quot;
+      link[e651] &quot;Privacy policy&quot;
+    listitem &quot;About Wikipedia&quot;
+      link[e652] &quot;About Wikipedia&quot;
+    listitem &quot;Disclaimers&quot;
+      link[e653] &quot;Disclaimers&quot;
+    listitem &quot;Contact Wikipedia&quot;
+      link[e654] &quot;Contact Wikipedia&quot;
+    listitem &quot;Legal &amp; safety contacts&quot;
+      link[e655] &quot;Legal &amp; safety contacts&quot;
+    listitem &quot;Code of Conduct&quot;
+      link[e656] &quot;Code of Conduct&quot;
+    listitem &quot;Developers&quot;
+      link[e657] &quot;Developers&quot;
+    listitem &quot;Statistics&quot;
+      link[e658] &quot;Statistics&quot;
+    listitem &quot;Cookie statement&quot;
+      link[e659] &quot;Cookie statement&quot;
+    listitem &quot;Mobile view&quot;
+      link[e660] &quot;Mobile view&quot;
+  list
+    listitem
+      link[e661]
+    listitem
+      link[e662]
+button[e663] &quot;Search&quot;
+search
+  form
+    textbox[e664] &quot;Search Wikipedia&quot;
+    button[e665] &quot;Search&quot;
+link[e666]
+link[e667]
+link[e668]
+link[e669]
+link[e670]
+link[e671]
+link[e672]
+button[e673] &quot;346 languages&quot;
+link[e674] &quot;Add topic&quot;</pre>
+    <div class="step-meta">
+      <span class="action-pill">click e20</span>
+      <div class="token-line">this page: <b class="snap">9,516</b> snapshot tokens
+        vs <b class="raw">89,581</b> raw HTML tokens</div>
+      <div class="token-line">running total: <b class="snap">19,032</b> seen by agent
+        vs <b class="raw">179,162</b> raw HTML equivalent</div>
+    </div>
+  </div>
+</div>
+<div class="step">
+  <div class="step-head">
+    <span class="step-idx">step 2</span>
+    <span class="step-title">creator of the Python programming language - Search results - Wikipedia — https://en.wikipedia.org/w/index.php?search=creator+of+the+Python+programming+language</span>
+  </div>
+  <div class="step-body">
+    <pre class="snapshot">document &quot;creator of the Python programming language - Search results - Wikipedia&quot;
+link[e1] &quot;Jump to content&quot;
+banner
+  navigation &quot;Site&quot;
+    checkbox[e2] &quot;Main menu&quot;
+    label &quot;Main menu&quot;
+    button[e3] &quot;move to sidebar&quot;
+    button[e4] &quot;hide&quot;
+    list
+      listitem &quot;Main page&quot;
+        link[e5] &quot;Main page&quot;
+      listitem &quot;Contents&quot;
+        link[e6] &quot;Contents&quot;
+      listitem &quot;Current events&quot;
+        link[e7] &quot;Current events&quot;
+      listitem &quot;Random article&quot;
+        link[e8] &quot;Random article&quot;
+      listitem &quot;About Wikipedia&quot;
+        link[e9] &quot;About Wikipedia&quot;
+      listitem &quot;Contact us&quot;
+        link[e10] &quot;Contact us&quot;
+    list
+      listitem &quot;Help&quot;
+        link[e11] &quot;Help&quot;
+      listitem &quot;Learn to edit&quot;
+        link[e12] &quot;Learn to edit&quot;
+      listitem &quot;Community portal&quot;
+        link[e13] &quot;Community portal&quot;
+      listitem &quot;Recent changes&quot;
+        link[e14] &quot;Recent changes&quot;
+      listitem &quot;Upload file&quot;
+        link[e15] &quot;Upload file&quot;
+      listitem &quot;Special pages&quot;
+        link[e16] &quot;Special pages&quot;
+  link[e17]
+  search
+    link[e18] &quot;Search&quot;
+    form
+      textbox[e19] &quot;Search Wikipedia&quot;
+      button[e20] &quot;Search&quot;
+  navigation &quot;Personal tools&quot;
+    navigation &quot;Appearance&quot;
+      checkbox[e21] &quot;Appearance&quot;
+      label &quot;Appearance&quot;
+    list
+      listitem &quot;Donate&quot;
+        link[e22] &quot;Donate&quot;
+      listitem &quot;Create account&quot;
+        link[e23] &quot;Create account&quot;
+      listitem &quot;Log in&quot;
+        link[e24] &quot;Log in&quot;
+    checkbox[e25] &quot;Personal tools&quot;
+    label &quot;Personal tools&quot;
+    list
+      listitem &quot;Donate&quot;
+        link[e26] &quot;Donate&quot;
+      listitem &quot;Create account&quot;
+        link[e27] &quot;Create account&quot;
+      listitem &quot;Log in&quot;
+        link[e28] &quot;Log in&quot;
+navigation &quot;Site&quot;
+main
+  banner
+    heading &quot;Search results&quot;
+    link[e29] &quot;Help&quot;
+  navigation &quot;Namespaces&quot;
+    checkbox[e30] &quot;Change language variant&quot;
+    label &quot;English&quot;
+  navigation &quot;Views&quot;
+  navigation &quot;Page tools&quot;
+    checkbox[e31] &quot;Tools&quot;
+    label &quot;Tools&quot;
+    button[e32] &quot;move to sidebar&quot;
+    button[e33] &quot;hide&quot;
+    list
+      listitem &quot;Upload file&quot;
+        link[e34] &quot;Upload file&quot;
+      listitem &quot;Printable version&quot;
+        link[e35] &quot;Printable version&quot;
+      listitem &quot;Get shortened URL&quot;
+        link[e36] &quot;Get shortened URL&quot;
+  navigation &quot;Page tools&quot;
+  navigation &quot;Appearance&quot;
+    button[e37] &quot;move to sidebar&quot;
+    button[e38] &quot;hide&quot;
+  form
+    textbox[e39] &quot;creator of the Python programming language&quot;
+    button[e40] &quot;Search&quot;
+    list
+      listitem &quot;Content pages&quot;
+        link[e41] &quot;Content pages&quot;
+      listitem &quot;Multimedia&quot;
+        link[e42] &quot;Multimedia&quot;
+      listitem &quot;Everything&quot;
+        link[e43] &quot;Everything&quot;
+      listitem &quot;Advanced&quot;
+        link[e44] &quot;Advanced&quot;
+  paragraph &quot;The page &quot; Creator of the Python programming language &quot; does not exist. You can create a draft and submit it for review or request that a redirect be created , but consider checking the search results below to see whether the topic is already covered.&quot;
+    link[e45] &quot;Creator of the Python programming language&quot;
+    link[e46] &quot;create a draft and submit it for review&quot;
+    link[e47] &quot;request that a redirect be created&quot;
+  form
+    combobox[e48] &quot;limit&quot;
+    button[e49] &quot;Go&quot;
+  link[e50] &quot;Next page&quot;
+  list
+    listitem &quot;Python ( programming language ) Python is a high-level, general-purpose programming language that emphasizes code readability, simplicity, and ease- of -writing with the use of significant... 140 KB (11,627 words) – 02:35, 10 July 2026&quot;
+      link[e51]
+      link[e52] &quot;Python ( programming language )&quot;
+    listitem &quot;Guido van Rossum (category Python ( programming language ) people) He is the creator of the Python programming language , for which he was the &quot;benevolent dictator for life&quot; (BDFL) until he stepped down from the position... 24 KB (1,915 words) – 20:52, 11 June 2026&quot;
+      link[e53]
+      link[e54] &quot;Guido van Rossum&quot;
+    listitem &quot;frameless image layout Benevolent dictator for life (category Computer programming folklore) Rossum, the creator of the Python programming language . Shortly after Van Rossum joined the Corporation for National Research Initiatives, the term appeared... 21 KB (1,273 words) – 14:07, 8 July 2026&quot;
+      link[e55] &quot;Benevolent dictator for life&quot;
+    listitem &quot;Python syntax and semantics The syntax of the Python programming language is the set of rules that defines how a Python program will be written and interpreted (by both the runtime... 67 KB (7,901 words) – 14:34, 3 July 2026&quot;
+      link[e56]
+      link[e57] &quot;Python syntax and semantics&quot;
+    listitem &quot;History of programming languages development of COBOL. Popularized machine-independent programming languages and the term &quot;debugging&quot;. Guido van Rossum, creator of Python . James Gosling... 38 KB (3,666 words) – 15:42, 2 June 2026&quot;
+      link[e58]
+      link[e59] &quot;History of programming languages&quot;
+    listitem &quot;frameless image layout General-purpose programming language domains. Conversely, a domain-specific programming language (DSL) is used within a specific area. For example, Python is a GPL, while SQL is a DSL for querying... 14 KB (1,496 words) – 11:54, 16 May 2026&quot;
+      link[e60] &quot;General-purpose programming language&quot;
+    listitem &quot;History of Python The programming language Python was conceived in the late 1980s, and its implementation was started in December 1989 by Guido van Rossum at CWI in the... 56 KB (4,268 words) – 22:36, 7 July 2026&quot;
+      link[e61]
+      link[e62] &quot;History of Python&quot;
+    listitem &quot;Julia ( programming language ) programming language . As a high-level language , distinctive aspects of Julia&#x27;s design include a type system with parametric polymorphism, the use of multiple... 114 KB (8,599 words) – 17:45, 13 July 2026&quot;
+      link[e63]
+      link[e64] &quot;Julia ( programming language )&quot;
+    listitem &quot;C ( programming language ) general-purpose programming language created in the 1970s by Dennis Ritchie. By design, C gives programmers relatively direct access to the features of typical... 99 KB (11,004 words) – 00:50, 10 July 2026&quot;
+      link[e65]
+      link[e66] &quot;C ( programming language )&quot;
+    listitem &quot;frameless image layout Just van Rossum (category Academic staff of the Royal Academy of Art, The Hague) the younger brother of Guido van Rossum, creator of the Python programming language . Just van Rossum was born and raised in the Netherlands alongside... 13 KB (1,608 words) – 13:06, 28 June 2026&quot;
+      link[e67] &quot;Just van Rossum&quot;
+    listitem &quot;frameless image layout List of Python software The Python programming language is actively used by many people, both in industry and academia, for a wide variety of purposes. Atom — an open-source... 36 KB (3,628 words) – 18:31, 18 June 2026&quot;
+      link[e68] &quot;List of Python software&quot;
+    listitem &quot;Visual programming language computing, a visual programming language (visual programming system, VPL, or, VPS), also known as diagrammatic programming , graphical programming or block coding... 30 KB (3,312 words) – 13:42, 27 June 2026&quot;
+      link[e69]
+      link[e70] &quot;Visual programming language&quot;
+    listitem &quot;frameless image layout ABC ( programming language ) influence on the design of the Python language , whose creator , Guido van Rossum, had worked for several years on the ABC system in the mid-1980s. Its... 7 KB (649 words) – 09:50, 6 December 2025&quot;
+      link[e71] &quot;ABC ( programming language )&quot;
+    listitem &quot;frameless image layout Posit PBC (category R ( programming language )) corporation founded by J. J. Allaire, creator of the programming language ColdFusion. Posit has no formal connection to the R Foundation for Statistical Computing... 14 KB (1,057 words) – 13:54, 16 June 2026&quot;
+      link[e72] &quot;Posit PBC&quot;
+    listitem &quot;Object-oriented programming computer program consists of objects that interact with one another. An OOP language is one that provides object-oriented programming features, but as the set... 59 KB (6,080 words) – 19:08, 4 July 2026&quot;
+      link[e73]
+      link[e74] &quot;Object-oriented programming&quot;
+    listitem &quot;frameless image layout Outline of the C programming language JavaScript programming language Outline of the Perl programming language Outline of the Python programming language Outline of the Rust programming language &quot;Introduction... 11 KB (754 words) – 22:16, 10 May 2026&quot;
+      link[e75] &quot;Outline of the C programming language&quot;
+    listitem &quot;Red ( programming language ) Red is a programming language designed to overcome the limits of the programming language Rebol. Red was introduced in 2011 by Nenad Rakočević, and is... 12 KB (958 words) – 13:38, 3 June 2026&quot;
+      link[e76]
+      link[e77] &quot;Red ( programming language )&quot;
+    listitem &quot;Ruby ( programming language ) supports multiple programming paradigms, including procedural, object-oriented, and functional programming . According to the creator , Ruby was influenced... 58 KB (5,526 words) – 15:37, 3 July 2026&quot;
+      link[e78]
+      link[e79] &quot;Ruby ( programming language )&quot;
+    listitem &quot;frameless image layout Dr. Dobb&#x27;s Excellence in Programming Award commitment to sharing the fruits of his efforts with fellow programmers.&quot; Guido van Rossum, creator of the Python programming language , and Donald Becker... 19 KB (2,357 words) – 16:37, 19 September 2025&quot;
+      link[e80] &quot;Dr. Dobb&#x27;s Excellence in Programming Award&quot;
+    listitem &quot;Nim ( programming language ) an Ordinal) According to the language creator , Nim was conceived to combine the best parts of Ada typing system, Python flexibility, and powerful Lisp... 56 KB (5,691 words) – 07:17, 16 June 2026&quot;
+      link[e81]
+      link[e82] &quot;Nim ( programming language )&quot;
+  list
+    listitem &quot;Quotes from Wikiquote C ( programming language ) Practical Python . p. xix C is quirky, flawed, and an enormous success. Dennis Ritchie, &quot; The Development of the C Language ,&quot; History of Programming Languages -II See all results&quot;
+      link[e83] &quot;Quotes from Wikiquote&quot;
+      link[e84] &quot;C ( programming language )&quot;
+      link[e85] &quot;See all results&quot;
+    listitem &quot;Texts from Wikisource Free Software Leaders Stand Together Larry Wall, creator of the Perl Language Guido van Rossum, creator of the Python Language Tim O&#x27;Reilly, publisher Bob Young, co-founder of Red Hat Larry See all results&quot;
+      link[e86] &quot;Texts from Wikisource&quot;
+      link[e87] &quot;Free Software Leaders Stand Together&quot;
+      link[e88] &quot;See all results&quot;
+    listitem &quot;Textbooks from Wikibooks Python Programming /Classes spans several lines. Its formatting is in accordance with the style suggestions of Python&#x27;s creator , Guido van Rossum in PEP 8. It is fairly easy to add methods See all results&quot;
+      link[e89] &quot;Textbooks from Wikibooks&quot;
+      link[e90] &quot;Python Programming /Classes&quot;
+      link[e91] &quot;See all results&quot;
+  form
+    combobox[e92] &quot;limit&quot;
+    button[e93] &quot;Go&quot;
+  link[e94] &quot;Next page&quot;
+  link[e95] &quot;https://en.wikipedia.org/wiki/Special:Search&quot;
+contentinfo
+  list
+    listitem &quot;Privacy policy&quot;
+      link[e96] &quot;Privacy policy&quot;
+    listitem &quot;About Wikipedia&quot;
+      link[e97] &quot;About Wikipedia&quot;
+    listitem &quot;Disclaimers&quot;
+      link[e98] &quot;Disclaimers&quot;
+    listitem &quot;Contact Wikipedia&quot;
+      link[e99] &quot;Contact Wikipedia&quot;
+    listitem &quot;Legal &amp; safety contacts&quot;
+      link[e100] &quot;Legal &amp; safety contacts&quot;
+    listitem &quot;Code of Conduct&quot;
+      link[e101] &quot;Code of Conduct&quot;
+    listitem &quot;Developers&quot;
+      link[e102] &quot;Developers&quot;
+    listitem &quot;Statistics&quot;
+      link[e103] &quot;Statistics&quot;
+    listitem &quot;Cookie statement&quot;
+      link[e104] &quot;Cookie statement&quot;
+    listitem &quot;Mobile view&quot;
+      link[e105] &quot;Mobile view&quot;
+  list
+    listitem
+      link[e106]
+    listitem
+      link[e107]
+button[e108] &quot;Search&quot;
+search
+  form
+    textbox[e109] &quot;Search Wikipedia&quot;
+    button[e110] &quot;Search&quot;
+link[e111]
+link[e112]
+link[e113]
+link[e114]
+link[e115]
+link[e116]
+link[e117]
+link[e118] &quot;Add topic&quot;</pre>
+    <div class="step-meta">
+      <span class="action-pill">click e54</span>
+      <div class="token-line">this page: <b class="snap">2,546</b> snapshot tokens
+        vs <b class="raw">29,593</b> raw HTML tokens</div>
+      <div class="token-line">running total: <b class="snap">21,578</b> seen by agent
+        vs <b class="raw">208,755</b> raw HTML equivalent</div>
+    </div>
+  </div>
+</div>
+<div class="step">
+  <div class="step-head">
+    <span class="step-idx">step 3</span>
+    <span class="step-title">Guido van Rossum - Wikipedia — https://en.wikipedia.org/wiki/Guido_van_Rossum</span>
+  </div>
+  <div class="step-body">
+    <pre class="snapshot">document &quot;Guido van Rossum - Wikipedia&quot;
+link[e1] &quot;Jump to content&quot;
+banner
+  navigation &quot;Site&quot;
+    checkbox[e2] &quot;Main menu&quot;
+    label &quot;Main menu&quot;
+    button[e3] &quot;move to sidebar&quot;
+    button[e4] &quot;hide&quot;
+    list
+      listitem &quot;Main page&quot;
+        link[e5] &quot;Main page&quot;
+      listitem &quot;Contents&quot;
+        link[e6] &quot;Contents&quot;
+      listitem &quot;Current events&quot;
+        link[e7] &quot;Current events&quot;
+      listitem &quot;Random article&quot;
+        link[e8] &quot;Random article&quot;
+      listitem &quot;About Wikipedia&quot;
+        link[e9] &quot;About Wikipedia&quot;
+      listitem &quot;Contact us&quot;
+        link[e10] &quot;Contact us&quot;
+    list
+      listitem &quot;Help&quot;
+        link[e11] &quot;Help&quot;
+      listitem &quot;Learn to edit&quot;
+        link[e12] &quot;Learn to edit&quot;
+      listitem &quot;Community portal&quot;
+        link[e13] &quot;Community portal&quot;
+      listitem &quot;Recent changes&quot;
+        link[e14] &quot;Recent changes&quot;
+      listitem &quot;Upload file&quot;
+        link[e15] &quot;Upload file&quot;
+      listitem &quot;Special pages&quot;
+        link[e16] &quot;Special pages&quot;
+  link[e17]
+  search
+    link[e18] &quot;Search&quot;
+    form
+      textbox[e19] &quot;Search Wikipedia&quot;
+      button[e20] &quot;Search&quot;
+  navigation &quot;Personal tools&quot;
+    navigation &quot;Appearance&quot;
+      checkbox[e21] &quot;Appearance&quot;
+      label &quot;Appearance&quot;
+    list
+      listitem &quot;Donate&quot;
+        link[e22] &quot;Donate&quot;
+      listitem &quot;Create account&quot;
+        link[e23] &quot;Create account&quot;
+      listitem &quot;Log in&quot;
+        link[e24] &quot;Log in&quot;
+    checkbox[e25] &quot;Personal tools&quot;
+    label &quot;Personal tools&quot;
+    list
+      listitem &quot;Donate&quot;
+        link[e26] &quot;Donate&quot;
+      listitem &quot;Create account&quot;
+        link[e27] &quot;Create account&quot;
+      listitem &quot;Log in&quot;
+        link[e28] &quot;Log in&quot;
+navigation &quot;Site&quot;
+navigation &quot;Contents&quot;
+  heading &quot;Contents&quot;
+  button[e29] &quot;move to sidebar&quot;
+  button[e30] &quot;hide&quot;
+  list
+    listitem &quot;(Top)&quot;
+      link[e31] &quot;(Top)&quot;
+    listitem &quot;1 Life and education&quot;
+      link[e32] &quot;1 Life and education&quot;
+    listitem &quot;2 Work Toggle Work subsection 2.1 Centrum Wiskunde &amp; Informatica 2.2 Google 2.3 Dropbox 2.4 Microsoft&quot;
+      link[e33] &quot;2 Work&quot;
+      button[e34] &quot;Toggle Work subsection&quot;
+      list
+        listitem &quot;2.1 Centrum Wiskunde &amp; Informatica&quot;
+          link[e35] &quot;2.1 Centrum Wiskunde &amp; Informatica&quot;
+        listitem &quot;2.2 Google&quot;
+          link[e36] &quot;2.2 Google&quot;
+        listitem &quot;2.3 Dropbox&quot;
+          link[e37] &quot;2.3 Dropbox&quot;
+        listitem &quot;2.4 Microsoft&quot;
+          link[e38] &quot;2.4 Microsoft&quot;
+    listitem &quot;3 Python&quot;
+      link[e39] &quot;3 Python&quot;
+    listitem &quot;4 &quot;Computer Programming for Everybody&quot; proposal&quot;
+      link[e40] &quot;4 &quot;Computer Programming for Everybody&quot; proposal&quot;
+    listitem &quot;5 Awards&quot;
+      link[e41] &quot;5 Awards&quot;
+    listitem &quot;6 References&quot;
+      link[e42] &quot;6 References&quot;
+    listitem &quot;7 External links&quot;
+      link[e43] &quot;7 External links&quot;
+main
+  banner
+    navigation &quot;Contents&quot;
+      checkbox[e44] &quot;Toggle the table of contents&quot;
+      label &quot;Toggle the table of contents&quot;
+    heading &quot;Guido van Rossum&quot;
+    checkbox[e45] &quot;51 languages&quot;
+    label &quot;51 languages&quot;
+    list
+      listitem &quot;Aragonés&quot;
+        link[e46] &quot;Aragonés&quot;
+      listitem &quot;العربية&quot;
+        link[e47] &quot;العربية&quot;
+      listitem &quot;مصرى&quot;
+        link[e48] &quot;مصرى&quot;
+      listitem &quot;Azərbaycanca&quot;
+        link[e49] &quot;Azərbaycanca&quot;
+      listitem &quot;Беларуская&quot;
+        link[e50] &quot;Беларуская&quot;
+      listitem &quot;Български&quot;
+        link[e51] &quot;Български&quot;
+      listitem &quot;বাংলা&quot;
+        link[e52] &quot;বাংলা&quot;
+      listitem &quot;Català&quot;
+        link[e53] &quot;Català&quot;
+      listitem &quot;کوردی&quot;
+        link[e54] &quot;کوردی&quot;
+      listitem &quot;Čeština&quot;
+        link[e55] &quot;Čeština&quot;
+      listitem &quot;Чӑвашла&quot;
+        link[e56] &quot;Чӑвашла&quot;
+      listitem &quot;Dansk&quot;
+        link[e57] &quot;Dansk&quot;
+      listitem &quot;Deutsch&quot;
+        link[e58] &quot;Deutsch&quot;
+      listitem &quot;Ελληνικά&quot;
+        link[e59] &quot;Ελληνικά&quot;
+      listitem &quot;Español&quot;
+        link[e60] &quot;Español&quot;
+      listitem &quot;Eesti&quot;
+        link[e61] &quot;Eesti&quot;
+      listitem &quot;Euskara&quot;
+        link[e62] &quot;Euskara&quot;
+      listitem &quot;فارسی&quot;
+        link[e63] &quot;فارسی&quot;
+      listitem &quot;Suomi&quot;
+        link[e64] &quot;Suomi&quot;
+      listitem &quot;Français&quot;
+        link[e65] &quot;Français&quot;
+      listitem &quot;עברית&quot;
+        link[e66] &quot;עברית&quot;
+      listitem &quot;हिन्दी&quot;
+        link[e67] &quot;हिन्दी&quot;
+      listitem &quot;Magyar&quot;
+        link[e68] &quot;Magyar&quot;
+      listitem &quot;Հայերեն&quot;
+        link[e69] &quot;Հայերեն&quot;
+      listitem &quot;Bahasa Indonesia&quot;
+        link[e70] &quot;Bahasa Indonesia&quot;
+      listitem &quot;Italiano&quot;
+        link[e71] &quot;Italiano&quot;
+      listitem &quot;日本語&quot;
+        link[e72] &quot;日本語&quot;
+      listitem &quot;ქართული&quot;
+        link[e73] &quot;ქართული&quot;
+      listitem &quot;ಕನ್ನಡ&quot;
+        link[e74] &quot;ಕನ್ನಡ&quot;
+      listitem &quot;한국어&quot;
+        link[e75] &quot;한국어&quot;
+      listitem &quot;Malagasy&quot;
+        link[e76] &quot;Malagasy&quot;
+      listitem &quot;മലയാളം&quot;
+        link[e77] &quot;മലയാളം&quot;
+      listitem &quot;Bahasa Melayu&quot;
+        link[e78] &quot;Bahasa Melayu&quot;
+      listitem &quot;Nederlands&quot;
+        link[e79] &quot;Nederlands&quot;
+      listitem &quot;Norsk bokmål&quot;
+        link[e80] &quot;Norsk bokmål&quot;
+      listitem &quot;Polski&quot;
+        link[e81] &quot;Polski&quot;
+      listitem &quot;Português&quot;
+        link[e82] &quot;Português&quot;
+      listitem &quot;Русский&quot;
+        link[e83] &quot;Русский&quot;
+      listitem &quot;සිංහල&quot;
+        link[e84] &quot;සිංහල&quot;
+      listitem &quot;Simple English&quot;
+        link[e85] &quot;Simple English&quot;
+      listitem &quot;Slovenčina&quot;
+        link[e86] &quot;Slovenčina&quot;
+      listitem &quot;Српски / srpski&quot;
+        link[e87] &quot;Српски / srpski&quot;
+      listitem &quot;Svenska&quot;
+        link[e88] &quot;Svenska&quot;
+      listitem &quot;Kiswahili&quot;
+        link[e89] &quot;Kiswahili&quot;
+      listitem &quot;தமிழ்&quot;
+        link[e90] &quot;தமிழ்&quot;
+      listitem &quot;ไทย&quot;
+        link[e91] &quot;ไทย&quot;
+      listitem &quot;Türkçe&quot;
+        link[e92] &quot;Türkçe&quot;
+      listitem &quot;Українська&quot;
+        link[e93] &quot;Українська&quot;
+      listitem &quot;اردو&quot;
+        link[e94] &quot;اردو&quot;
+      listitem &quot;Oʻzbekcha / ўзбекча&quot;
+        link[e95] &quot;Oʻzbekcha / ўзбекча&quot;
+      listitem &quot;中文&quot;
+        link[e96] &quot;中文&quot;
+    link[e97] &quot;Edit links&quot;
+  navigation &quot;Namespaces&quot;
+    list
+      listitem &quot;Article&quot;
+        link[e98] &quot;Article&quot;
+      listitem &quot;Talk&quot;
+        link[e99] &quot;Talk&quot;
+    checkbox[e100] &quot;Change language variant&quot;
+    label &quot;English&quot;
+  navigation &quot;Views&quot;
+    list
+      listitem &quot;Read&quot;
+        link[e101] &quot;Read&quot;
+      listitem &quot;Edit&quot;
+        link[e102] &quot;Edit&quot;
+      listitem &quot;View history&quot;
+        link[e103] &quot;View history&quot;
+  navigation &quot;Page tools&quot;
+    checkbox[e104] &quot;Tools&quot;
+    label &quot;Tools&quot;
+    button[e105] &quot;move to sidebar&quot;
+    button[e106] &quot;hide&quot;
+    list
+      listitem &quot;Read&quot;
+        link[e107] &quot;Read&quot;
+      listitem &quot;Edit&quot;
+        link[e108] &quot;Edit&quot;
+      listitem &quot;View history&quot;
+        link[e109] &quot;View history&quot;
+    list
+      listitem &quot;What links here&quot;
+        link[e110] &quot;What links here&quot;
+      listitem &quot;Related changes&quot;
+        link[e111] &quot;Related changes&quot;
+      listitem &quot;Upload file&quot;
+        link[e112] &quot;Upload file&quot;
+      listitem &quot;Permanent link&quot;
+        link[e113] &quot;Permanent link&quot;
+      listitem &quot;Page information&quot;
+        link[e114] &quot;Page information&quot;
+      listitem &quot;Cite this page&quot;
+        link[e115] &quot;Cite this page&quot;
+      listitem &quot;Get shortened URL&quot;
+        link[e116] &quot;Get shortened URL&quot;
+      listitem &quot;Switch to legacy parser&quot;
+        link[e117] &quot;Switch to legacy parser&quot;
+    list
+      listitem &quot;Download as PDF&quot;
+        link[e118] &quot;Download as PDF&quot;
+      listitem &quot;Printable version&quot;
+        link[e119] &quot;Printable version&quot;
+    list
+      listitem &quot;Wikimedia Commons&quot;
+        link[e120] &quot;Wikimedia Commons&quot;
+      listitem &quot;Wikidata item&quot;
+        link[e121] &quot;Wikidata item&quot;
+  navigation &quot;Page tools&quot;
+  navigation &quot;Appearance&quot;
+    button[e122] &quot;move to sidebar&quot;
+    button[e123] &quot;hide&quot;
+  region
+    note &quot;&quot;GvR&quot; redirects here. For other uses, see GVR (disambiguation) .&quot;
+      link[e124] &quot;GVR (disambiguation)&quot;
+    note &quot;In this Dutch name , the surname is Van Rossum , not Rossum .&quot;
+      link[e125] &quot;Dutch name&quot;
+      link[e126] &quot;surname&quot;
+    table &quot;Guido van Rossum Van Rossum in 2024 Born ( 1956-01-31 ) 31 January 1956 (age 70) [ 1 ] The Hague , Netherlands [ 2 ] Alma mater University of Amsterdam ( BS ) Occupations Computer programmer, author Employer Microsoft Known for Creating the Python programming language Children 1 [ 3 ] Awards Award…&quot;
+      row &quot;Guido van Rossum&quot;
+        columnheader &quot;Guido van Rossum&quot;
+      row &quot;Van Rossum in 2024&quot;
+        cell &quot;Van Rossum in 2024&quot;
+          link[e127]
+      row &quot;Born ( 1956-01-31 ) 31 January 1956 (age 70) [ 1 ] The Hague , Netherlands [ 2 ]&quot;
+        columnheader &quot;Born&quot;
+        cell &quot;( 1956-01-31 ) 31 January 1956 (age 70) [ 1 ] The Hague , Netherlands [ 2 ]&quot;
+          link[e128] &quot;[ 1 ]&quot;
+          link[e129] &quot;The Hague&quot;
+          link[e130] &quot;[ 2 ]&quot;
+      row &quot;Alma mater University of Amsterdam ( BS )&quot;
+        columnheader &quot;Alma mater&quot;
+        cell &quot;University of Amsterdam ( BS )&quot;
+          link[e131] &quot;University of Amsterdam&quot;
+          link[e132] &quot;BS&quot;
+      row &quot;Occupations Computer programmer, author&quot;
+        columnheader &quot;Occupations&quot;
+        cell &quot;Computer programmer, author&quot;
+      row &quot;Employer Microsoft&quot;
+        columnheader &quot;Employer&quot;
+        cell &quot;Microsoft&quot;
+          link[e133] &quot;Microsoft&quot;
+      row &quot;Known for Creating the Python programming language&quot;
+        columnheader &quot;Known for&quot;
+        cell &quot;Creating the Python programming language&quot;
+          link[e134] &quot;Python programming language&quot;
+      row &quot;Children 1 [ 3 ]&quot;
+        columnheader &quot;Children&quot;
+        cell &quot;1 [ 3 ]&quot;
+          link[e135] &quot;[ 3 ]&quot;
+      row &quot;Awards Award for the Advancement of Free Software (2001)&quot;
+        columnheader &quot;Awards&quot;
+        cell &quot;Award for the Advancement of Free Software (2001)&quot;
+          link[e136] &quot;Award for the Advancement of Free Software&quot;
+      row &quot;Website gvanrossum .github .io&quot;
+        columnheader &quot;Website&quot;
+        cell &quot;gvanrossum .github .io&quot;
+          link[e137] &quot;gvanrossum .github .io&quot;
+    link[e138]
+    link[e139] &quot;Google I/O&quot;
+    link[e140]
+    link[e141] &quot;O&#x27;Reilly Open Source Convention&quot;
+    paragraph &quot;Guido van Rossum ( .mw-parser-output .IPA-label-small{font-size:85%}.mw-parser-output .references .IPA-label-small,.mw-parser-output .infobox .IPA-label-small,.mw-parser-output .navbox .IPA-label-small{font-size:100%} Dutch: [ ˈxidoː vɑn ˈrɔsʏm ] ; born 31 January 1956) is a Dutch programmer . He i…&quot;
+      link[e142] &quot;[ ˈxidoː vɑn ˈrɔsʏm ]&quot;
+      link[e143] &quot;programmer&quot;
+      link[e144] &quot;Python programming language&quot;
+      link[e145] &quot;benevolent dictator for life&quot;
+      link[e146] &quot;[ 4 ]&quot;
+      link[e147] &quot;[ 5 ]&quot;
+      link[e148] &quot;[ 6 ]&quot;
+  region
+    heading &quot;Life and education&quot;
+    link[e149] &quot;edit&quot;
+    paragraph &quot;Van Rossum was born and raised in the Netherlands , where he received a master&#x27;s degree in mathematics and computer science from the University of Amsterdam in 1982. He received a bronze medal in 1974 in the International Mathematical Olympiad . [ 7 ] His brother, Just van Rossum , is a type design…&quot;
+      link[e150] &quot;Netherlands&quot;
+      link[e151] &quot;computer science&quot;
+      link[e152] &quot;University of Amsterdam&quot;
+      link[e153] &quot;International Mathematical Olympiad&quot;
+      link[e154] &quot;[ 7 ]&quot;
+      link[e155] &quot;Just van Rossum&quot;
+      link[e156] &quot;type designer&quot;
+      link[e157] &quot;typeface&quot;
+      link[e158] &quot;[ 8 ]&quot;
+    paragraph &quot;Van Rossum lives in Belmont , California, with his wife, Kim Knapp, [ 9 ] and their son. [ 10 ] [ 11 ] [ 12 ]&quot;
+      link[e159] &quot;Belmont&quot;
+      link[e160] &quot;[ 9 ]&quot;
+      link[e161] &quot;[ 10 ]&quot;
+      link[e162] &quot;[ 11 ]&quot;
+      link[e163] &quot;[ 12 ]&quot;
+  region
+    heading &quot;Work&quot;
+    link[e164] &quot;edit&quot;
+    region
+      heading &quot;Centrum Wiskunde &amp; Informatica&quot;
+      link[e165] &quot;edit&quot;
+      paragraph &quot;While working at the Centrum Wiskunde &amp; Informatica (CWI), Van Rossum wrote and contributed a glob() routine to BSD Unix in 1986 [ 13 ] [ 14 ] and helped develop the ABC programming language . He once stated, &quot;I try to mention ABC&#x27;s influence because I&#x27;m indebted to everything I learned during that…&quot;
+        link[e166] &quot;Centrum Wiskunde &amp; Informatica&quot;
+        link[e167] &quot;glob()&quot;
+        link[e168] &quot;BSD&quot;
+        link[e169] &quot;Unix&quot;
+        link[e170] &quot;[ 13 ]&quot;
+        link[e171] &quot;[ 14 ]&quot;
+        link[e172] &quot;ABC programming language&quot;
+        link[e173] &quot;[ 15 ]&quot;
+        link[e174] &quot;Grail&quot;
+        link[e175] &quot;web browser&quot;
+        link[e176] &quot;Python&quot;
+        link[e177] &quot;HTML&quot;
+        link[e178] &quot;[ 16 ]&quot;
+      paragraph &quot;He has worked for various research institutes, including the CWI in the Netherlands, the U.S. National Institute of Standards and Technology (NIST), and the Corporation for National Research Initiatives (CNRI). In May 2000, he left CNRI along with three other Python core developers to work for tech…&quot;
+        link[e179] &quot;National Institute of Standards and Technology&quot;
+        link[e180] &quot;Corporation for National Research Initiatives&quot;
+        link[e181] &quot;[ 17 ]&quot;
+        link[e182] &quot;[ 18 ]&quot;
+        link[e183] &quot;Zope&quot;
+        link[e184] &quot;[ 19 ]&quot;
+    region
+      heading &quot;Google&quot;
+      link[e185] &quot;edit&quot;
+      paragraph &quot;From 2005 to December 2012, Van Rossum worked at Google, where he spent half of his time developing the Python language. At Google, he developed Mondrian, a web-based code review system written in Python and used within the company. He named the software after the Dutch painter Piet Mondrian . [ 20…&quot;
+        link[e186] &quot;code review&quot;
+        link[e187] &quot;Piet Mondrian&quot;
+        link[e188] &quot;[ 20 ]&quot;
+        link[e189] &quot;Rietveld&quot;
+        link[e190] &quot;Gerrit Rietveld&quot;
+        link[e191] &quot;[ 21 ]&quot;
+        link[e192] &quot;[ 22 ]&quot;
+    region
+      heading &quot;Dropbox&quot;
+      link[e193] &quot;edit&quot;
+      paragraph &quot;In January 2013, Van Rossum started working at the cloud file storage company Dropbox . [ 23 ] [ 24 ]&quot;
+        link[e194] &quot;cloud file storage&quot;
+        link[e195] &quot;Dropbox&quot;
+        link[e196] &quot;[ 23 ]&quot;
+        link[e197] &quot;[ 24 ]&quot;
+      paragraph &quot;In October 2019, Van Rossum left Dropbox and officially retired. [ 25 ] [ 26 ] [ 27 ]&quot;
+        link[e198] &quot;[ 25 ]&quot;
+        link[e199] &quot;[ 26 ]&quot;
+        link[e200] &quot;[ 27 ]&quot;
+    region
+      heading &quot;Microsoft&quot;
+      link[e201] &quot;edit&quot;
+      paragraph &quot;On 12 November 2020 Van Rossum announced that he was coming out of retirement to join the Developer Division at Microsoft . He currently holds the title Distinguished Engineer at Microsoft. [ 28 ] [ 29 ] [ 30 ]&quot;
+        link[e202] &quot;Microsoft&quot;
+        link[e203] &quot;[ 28 ]&quot;
+        link[e204] &quot;[ 29 ]&quot;
+        link[e205] &quot;[ 30 ]&quot;
+  region
+    heading &quot;Python&quot;
+    link[e206] &quot;edit&quot;
+    note &quot;Main article: Python (programming language)&quot;
+      link[e207] &quot;Python (programming language)&quot;
+    paragraph &quot;In December 1989, Van Rossum had been looking for a &quot; &#x27; hobby&#x27; programming project that would keep [him] occupied during the week around Christmas&quot; as his office was closed when he decided to write an interpreter for a &quot;new scripting language [he] had been thinking about lately: a descendant of ABC…&quot;
+      link[e208] &quot;interpreter&quot;
+      link[e209] &quot;ABC&quot;
+      link[e210] &quot;Unix&quot;
+      link[e211] &quot;C&quot;
+      link[e212] &quot;Monty Python&#x27;s Flying Circus&quot;
+    paragraph &quot;He has explained that Python&#x27;s predecessor, ABC , was inspired by SETL , noting that ABC co-developer Lambert Meertens had &quot;spent a year with the SETL group at NYU before coming up with the final ABC design&quot;. [ 31 ]&quot;
+      link[e213] &quot;ABC&quot;
+      link[e214] &quot;SETL&quot;
+      link[e215] &quot;Lambert Meertens&quot;
+      link[e216] &quot;NYU&quot;
+      link[e217] &quot;[ 31 ]&quot;
+    paragraph &quot;On 12 July 2018, Van Rossum announced that he would be stepping down from the position of benevolent dictator for life of the Python programming language. [ 32 ]&quot;
+      link[e218] &quot;benevolent dictator for life&quot;
+      link[e219] &quot;[ 32 ]&quot;
+  region
+    heading &quot;&quot;Computer Programming for Everybody&quot; proposal&quot;
+    link[e220] &quot;edit&quot;
+    paragraph &quot;In 1999, Van Rossum submitted a funding proposal to the Defense Advanced Research Projects Agency (DARPA) called &quot;Computer Programming for Everybody&quot;, in which he further defined his goals for Python:&quot;
+      link[e221] &quot;Defense Advanced Research Projects Agency&quot;
+    list
+      listitem &quot;An easy and intuitive language just as powerful as major competitors&quot;
+      listitem &quot;Open source , so anyone can contribute to its development&quot;
+        link[e222] &quot;Open source&quot;
+      listitem &quot;Code that is as understandable as plain English&quot;
+      listitem &quot;Suitability for everyday tasks, allowing for short development times&quot;
+    paragraph &quot;In 2019, Python became the second most popular language on GitHub , the largest source code management website on the internet, after JavaScript . [ 33 ] In 2024 Python became the most used language on GitHub , overtaking JavaScript after a 10-year run as the most used language. [ 34 ] According to…&quot;
+      link[e223] &quot;GitHub&quot;
+      link[e224] &quot;source code&quot;
+      link[e225] &quot;JavaScript&quot;
+      link[e226] &quot;[ 33 ]&quot;
+      link[e227] &quot;GitHub&quot;
+      link[e228] &quot;JavaScript&quot;
+      link[e229] &quot;[ 34 ]&quot;
+      link[e230] &quot;[ 35 ]&quot;
+      link[e231] &quot;TIOBE Programming Community Index&quot;
+      link[e232] &quot;[ 36 ]&quot;
+  region
+    heading &quot;Awards&quot;
+    link[e233] &quot;edit&quot;
+    list
+      listitem &quot;At the 2002 FOSDEM conference in Brussels , Van Rossum received the 2001 Award for the Advancement of Free Software from the Free Software Foundation (FSF) for his work on Python.&quot;
+        link[e234] &quot;FOSDEM&quot;
+        link[e235] &quot;Brussels&quot;
+        link[e236] &quot;Award for the Advancement of Free Software&quot;
+        link[e237] &quot;Free Software Foundation&quot;
+      listitem &quot;In May 2003, he received a NLUUG Award. [ 37 ]&quot;
+        link[e238] &quot;NLUUG&quot;
+        link[e239] &quot;[ 37 ]&quot;
+      listitem &quot;In 2006, he was recognized as an ACM Distinguished Engineer .&quot;
+        link[e240] &quot;ACM Distinguished Engineer&quot;
+      listitem &quot;In 2018, he was made a Fellow of the Computer History museum . [ 38 ]&quot;
+        link[e241] &quot;Computer History museum&quot;
+        link[e242] &quot;[ 38 ]&quot;
+      listitem &quot;In 2019, he was awarded the honorary title of Dijkstra Fellow by CWI . [ 39 ]&quot;
+        link[e243] &quot;CWI&quot;
+        link[e244] &quot;[ 39 ]&quot;
+      listitem &quot;In 2023, he was awarded the C&amp;C Prize by NEC Corporation for developing the Python programming language. [ 40 ]&quot;
+        link[e245] &quot;C&amp;C Prize&quot;
+        link[e246] &quot;[ 40 ]&quot;
+  region
+    heading &quot;References&quot;
+    link[e247] &quot;edit&quot;
+    list
+      listitem &quot;↑ .mw-parser-output cite.citation{font-style:inherit;word-wrap:break-word}.mw-parser-output .citation q{quotes:&quot;\&quot;&quot;&quot;\&quot;&quot;&quot;&#x27;&quot;&quot;&#x27;&quot;}.mw-parser-output .citation:target{background-color:rgba(0,127,255,0.133)}.mw-parser-output .id-lock-free.id-lock-free a{background:url(&quot;//upload.wikimedia.org/wikipedia/com…&quot;
+        link[e248] &quot;↑&quot;
+        link[e249] &quot;&quot;(Python-Dev) Happy Birthday, Guido!&quot;&quot;
+        link[e250] &quot;Archived&quot;
+      listitem &quot;↑ Hsu, Hansen (5 April 2018). &quot;2018 Museum Fellow Guido van Rossum, Python Creator &amp; Benevolent Dictator for Life&quot; . Computer History Museum . Archived from the original on 24 July 2018 . Retrieved 19 May 2021 .&quot;
+        link[e251] &quot;↑&quot;
+        link[e252] &quot;&quot;2018 Museum Fellow Guido van Rossum, Python Creator &amp; Benevolent Dictator for Life&quot;&quot;
+        link[e253] &quot;Archived&quot;
+      listitem &quot;↑ &quot;Guido van Rossum&quot; . CodeCall Programming Wiki. Archived from the original on 31 October 2008.&quot;
+        link[e254] &quot;↑&quot;
+        link[e255] &quot;&quot;Guido van Rossum&quot;&quot;
+        link[e256] &quot;the original&quot;
+      listitem &quot;↑ &quot;Benevolent dictator for life&quot; . Linux Format . 1 February 2005. Archived from the original on 1 October 2006 . Retrieved 1 November 2007 .&quot;
+        link[e257] &quot;↑&quot;
+        link[e258] &quot;&quot;Benevolent dictator for life&quot;&quot;
+        link[e259] &quot;Linux Format&quot;
+        link[e260] &quot;the original&quot;
+      listitem &quot;↑ &quot; [ python-committers ] Transfer of power&quot; . www.mail-archive.com . Archived from the original on 12 July 2018 . Retrieved 12 July 2018 .&quot;
+        link[e261] &quot;↑&quot;
+        link[e262] &quot;&quot; [ python-committers ] Transfer of power&quot;&quot;
+        link[e263] &quot;Archived&quot;
+      listitem &quot;↑ &quot;Steering Council nomination: Guido van Rossum (2020 term)&quot; . 27 November 2019. Archived from the original on 14 December 2021 . Retrieved 13 November 2020 .&quot;
+        link[e264] &quot;↑&quot;
+        link[e265] &quot;&quot;Steering Council nomination: Guido van Rossum (2020 term)&quot;&quot;
+        link[e266] &quot;Archived&quot;
+      listitem &quot;↑ &quot;International Mathematical Olympiad&quot; . www.imo-official.org . Archived from the original on 10 March 2023 . Retrieved 23 May 2022 .&quot;
+        link[e267] &quot;↑&quot;
+        link[e268] &quot;&quot;International Mathematical Olympiad&quot;&quot;
+        link[e269] &quot;Archived&quot;
+      listitem &quot;↑ Thomas, Jockin (28 May 2016). &quot;Learning Python Makes You A Better Designer: An Interview with Just van Rossum&quot; . Medium. Archived from the original on 25 October 2019 . Retrieved 25 October 2019 .&quot;
+        link[e270] &quot;↑&quot;
+        link[e271] &quot;&quot;Learning Python Makes You A Better Designer: An Interview with Just van Rossum&quot;&quot;
+        link[e272] &quot;Archived&quot;
+      listitem &quot;↑ Manheimer, Ken (6 June 2000). &quot;(Python-Dev) Guido and Kim married&quot; . Python-Dev – Python core developers. Archived from the original on 28 September 2010.&quot;
+        link[e273] &quot;↑&quot;
+        link[e274] &quot;&quot;(Python-Dev) Guido and Kim married&quot;&quot;
+        link[e275] &quot;Archived&quot;
+      listitem &quot;↑ &quot;Guido van Rossum – Brief Bio&quot; . Archived from the original on 19 August 2014.&quot;
+        link[e276] &quot;↑&quot;
+        link[e277] &quot;&quot;Guido van Rossum – Brief Bio&quot;&quot;
+        link[e278] &quot;Archived&quot;
+      listitem &quot;↑ &quot;(Mailman-Announce) forwarded message from Guido van Rossum&quot; . 30 May 2000. Archived from the original on 27 May 2008. Oh, and to top it all off, I&#x27;m going on vacation. I&#x27;m getting married and will be relaxing on my honeymoon.&quot;
+        link[e279] &quot;↑&quot;
+        link[e280] &quot;&quot;(Mailman-Announce) forwarded message from Guido van Rossum&quot;&quot;
+        link[e281] &quot;Archived&quot;
+      listitem &quot;↑ van Rossum, Guido. &quot;What&#x27;s New in Python?&quot; (PDF) . &quot;Not your usual list of new features&quot;. Stanford CSL Colloquium, 29 October 2003; BayPiggies, 13 November 2003 . Elemental Security. Archived (PDF) from the original on 27 June 2010.&quot;
+        link[e282] &quot;↑&quot;
+        link[e283] &quot;&quot;What&#x27;s New in Python?&quot;&quot;
+        link[e284] &quot;Archived&quot;
+      listitem &quot;↑ &quot; &#x27;Globbing&#x27; library routine&quot; . Archived from the original on 19 December 2007.&quot;
+        link[e285] &quot;↑&quot;
+        link[e286] &quot;&quot; &#x27;Globbing&#x27; library routine&quot;&quot;
+        link[e287] &quot;the original&quot;
+      listitem &quot;↑ &quot;File::Glob – Perl extension for BSD glob routine&quot; . metacpan.org. Archived from the original on 7 August 2013.&quot;
+        link[e288] &quot;↑&quot;
+        link[e289] &quot;&quot;File::Glob – Perl extension for BSD glob routine&quot;&quot;
+        link[e290] &quot;Archived&quot;
+      listitem &quot;↑ Venners, Bill. &quot;The Making of Python&quot; . www.artima.com . Archived from the original on 1 September 2016 . Retrieved 14 September 2016 .&quot;
+        link[e291] &quot;↑&quot;
+        link[e292] &quot;&quot;The Making of Python&quot;&quot;
+        link[e293] &quot;Archived&quot;
+      listitem &quot;↑ &quot;Re: xmosaic experience&quot; . Archived from the original on 28 August 2016.&quot;
+        link[e294] &quot;↑&quot;
+        link[e295] &quot;&quot;Re: xmosaic experience&quot;&quot;
+        link[e296] &quot;Archived&quot;
+      listitem &quot;↑ &quot;Oral History of Guido van Rossum, part 2 – Computer History Museum&quot; (PDF) . Archived (PDF) from the original on 17 November 2021 . Retrieved 17 November 2021 .&quot;
+        link[e297] &quot;↑&quot;
+        link[e298] &quot;&quot;Oral History of Guido van Rossum, part 2 – Computer History Museum&quot;&quot;
+        link[e299] &quot;Archived&quot;
+      listitem &quot;↑ &quot;Python 2.3.2 License A. HISTORY OF THE SOFTWARE&quot; . Archived from the original on 17 November 2021 . Retrieved 17 November 2020 .&quot;
+        link[e300] &quot;↑&quot;
+        link[e301] &quot;&quot;Python 2.3.2 License A. HISTORY OF THE SOFTWARE&quot;&quot;
+        link[e302] &quot;Archived&quot;
+      listitem &quot;↑ &quot;2018 Museum Fellow Guido van Rossum, Python Creator &amp; Benevolent Dictator for Life – Computer History Museum&quot; . 5 April 2018. Archived from the original on 24 July 2018 . Retrieved 23 August 2018 .&quot;
+        link[e303] &quot;↑&quot;
+        link[e304] &quot;&quot;2018 Museum Fellow Guido van Rossum, Python Creator &amp; Benevolent Dictator for Life – Computer History Museum&quot;&quot;
+        link[e305] &quot;the original&quot;
+      listitem &quot;↑ van Rossum, Guido (May 2008). &quot;An Open Source App: Rietveld Code Review Tool&quot; . Archived from the original on 17 October 2015 . Retrieved 24 August 2012 . ... the internal web app, which I code-named Mondrian after one of my favorite Dutch painters&quot;
+        link[e306] &quot;↑&quot;
+        link[e307] &quot;&quot;An Open Source App: Rietveld Code Review Tool&quot;&quot;
+        link[e308] &quot;the original&quot;
+      listitem &quot;↑ &quot;An Open Source App: Rietveld Code Review Tool&quot; . Archived from the original on 17 October 2015.&quot;
+        link[e309] &quot;↑&quot;
+        link[e310] &quot;&quot;An Open Source App: Rietveld Code Review Tool&quot;&quot;
+        link[e311] &quot;the original&quot;
+      listitem &quot;↑ &quot;Guido van Rossum&quot; . @gvanrossum . Twitter. Archived from the original on 16 December 2013 . Retrieved 15 August 2022 . Today&#x27;s my last day at Google. In January I start a new job at Dropbox: t.co/JxnfdBM0&quot;
+        link[e312] &quot;↑&quot;
+        link[e313] &quot;&quot;Guido van Rossum&quot;&quot;
+        link[e314] &quot;Archived&quot;
+      listitem &quot;↑ Constine, Josh (7 December 2012). &quot;Dropbox Hires Away Google&#x27;s Guido van Rossum, The Father Of Python&quot; . Techcrunch. Archived from the original on 9 December 2012 . Retrieved 7 December 2012 .&quot;
+        link[e315] &quot;↑&quot;
+        link[e316] &quot;&quot;Dropbox Hires Away Google&#x27;s Guido van Rossum, The Father Of Python&quot;&quot;
+        link[e317] &quot;Archived&quot;
+      listitem &quot;↑ &quot;Welcome Guido!&quot; . Dropbox Tech Blog. 7 December 2012. Archived from the original on 7 September 2013 . Retrieved 6 September 2013 .&quot;
+        link[e318] &quot;↑&quot;
+        link[e319] &quot;&quot;Welcome Guido!&quot;&quot;
+        link[e320] &quot;Archived&quot;
+      listitem &quot;↑ @gvanrossum (30 October 2019). &quot;It&#x27;s bittersweet: I&#x27;m leaving @dropbox, and am now retired. I&#x27;ve learned a lot during my time as an engineer here – e.g. type annotations came from this experience – and I&#x27;ll miss working here&quot; ( Tweet ) . Retrieved 30 October 2019 – via Twitter .&quot;
+        link[e321] &quot;↑&quot;
+        link[e322] &quot;&quot;It&#x27;s bittersweet: I&#x27;m leaving @dropbox, and am now retired. I&#x27;ve learned a lot during my time as an engineer here – e.g. type annotations came from this experience – and I&#x27;ll miss working here&quot;&quot;
+        link[e323] &quot;Tweet&quot;
+        link[e324] &quot;Twitter&quot;
+      listitem &quot;↑ &quot;Thank you, Guido&quot; . Dropbox Blog . Dropbox . Archived from the original on 16 February 2021 . Retrieved 1 February 2021 .&quot;
+        link[e325] &quot;↑&quot;
+        link[e326] &quot;&quot;Thank you, Guido&quot;&quot;
+        link[e327] &quot;Dropbox&quot;
+        link[e328] &quot;Archived&quot;
+      listitem &quot;↑ Tung, Liam (31 October 2019). &quot;Python programming language creator retires, saying: &#x27;It&#x27;s been an amazing ride&#x27; &quot; . ZDNet . Archived from the original on 21 January 2021 . Retrieved 1 February 2021 .&quot;
+        link[e329] &quot;↑&quot;
+        link[e330] &quot;&quot;Python programming language creator retires, saying: &#x27;It&#x27;s been an amazing ride&#x27; &quot;&quot;
+        link[e331] &quot;ZDNet&quot;
+        link[e332] &quot;Archived&quot;
+      listitem &quot;↑ &quot;Guido van Rossum&quot; . Python&#x27;s BDFL-emeritus, Distinguished Engineer at Microsoft, Computer History Fellow. [ self-published source ]&quot;
+        link[e333] &quot;↑&quot;
+        link[e334] &quot;&quot;Guido van Rossum&quot;&quot;
+        link[e335] &quot;self-published source&quot;
+      listitem &quot;↑ @gvanrossum (12 November 2020). &quot;I decided that retirement was boring and have joined the Developer Division at Microsoft. To do what? Too many options to say! But it&#x27;ll make using Python better for sure (and not just on Windows :-). There&#x27;s lots of open source here. Watch this space&quot; ( Tweet ) .…&quot;
+        link[e336] &quot;↑&quot;
+        link[e337] &quot;&quot;I decided that retirement was boring and have joined the Developer Division at Microsoft. To do what? Too many options to say! But it&#x27;ll make using Python better for sure (and not just on Windows :-). There&#x27;s lots of open source here. Watch this space&quot;&quot;
+        link[e338] &quot;Tweet&quot;
+        link[e339] &quot;Twitter&quot;
+      listitem &quot;↑ Lardinois, Frederic (12 November 2020). &quot;Python creator Guido van Rossum joins Microsoft&quot; . TechCrunch . Archived from the original on 24 January 2021 . Retrieved 16 November 2020 .&quot;
+        link[e340] &quot;↑&quot;
+        link[e341] &quot;&quot;Python creator Guido van Rossum joins Microsoft&quot;&quot;
+        link[e342] &quot;TechCrunch&quot;
+        link[e343] &quot;Archived&quot;
+      listitem &quot;↑ &quot;Python-Dev ] SETL (was: Lukewarm about range literals)&quot; . 29 August 2000. Archived from the original on 14 May 2011.&quot;
+        link[e344] &quot;↑&quot;
+        link[e345] &quot;&quot;Python-Dev ] SETL (was: Lukewarm about range literals)&quot;&quot;
+        link[e346] &quot;Archived&quot;
+      listitem &quot;↑ Fairchild, Carlie (12 July 2018). &quot;Guido van Rossum Stepping Down from Role as Python&#x27;s Benevolent Dictator For Life&quot; . Linux Journal . Archived from the original on 13 July 2018 . Retrieved 12 July 2018 .&quot;
+        link[e347] &quot;↑&quot;
+        link[e348] &quot;&quot;Guido van Rossum Stepping Down from Role as Python&#x27;s Benevolent Dictator For Life&quot;&quot;
+        link[e349] &quot;the original&quot;
+      listitem &quot;↑ &quot;The State of the Octoverse&quot; . The State of the Octoverse . Archived from the original on 5 April 2017 . Retrieved 6 May 2021 .&quot;
+        link[e350] &quot;↑&quot;
+        link[e351] &quot;&quot;The State of the Octoverse&quot;&quot;
+        link[e352] &quot;Archived&quot;
+      listitem &quot;↑ &quot;Octoverse: AI leads Python to top language as the number of global developers surges&quot; . GitHub Insights . 29 October 2024. Archived from the original on 16 November 2024 . Retrieved 6 January 2025 .&quot;
+        link[e353] &quot;↑&quot;
+        link[e354] &quot;&quot;Octoverse: AI leads Python to top language as the number of global developers surges&quot;&quot;
+        link[e355] &quot;Archived&quot;
+      listitem &quot;↑ &quot;Programming Language Popularity&quot; . Archived from the original on 12 April 2015.&quot;
+        link[e356] &quot;↑&quot;
+        link[e357] &quot;&quot;Programming Language Popularity&quot;&quot;
+        link[e358] &quot;the original&quot;
+      listitem &quot;↑ &quot;index | TIOBE – The Software Quality Company&quot; . www.tiobe.com . Archived from the original on 15 October 2023 . Retrieved 29 May 2020 .&quot;
+        link[e359] &quot;↑&quot;
+        link[e360] &quot;&quot;index | TIOBE – The Software Quality Company&quot;&quot;
+        link[e361] &quot;Archived&quot;
+      listitem &quot;↑ &quot;Guido van Rossum Ontvangt NLUUG Award&quot; . NLUUG . 28 May 2003. Archived from the original on 8 March 2021 . Retrieved 22 January 2018 .&quot;
+        link[e362] &quot;↑&quot;
+        link[e363] &quot;&quot;Guido van Rossum Ontvangt NLUUG Award&quot;&quot;
+        link[e364] &quot;Archived&quot;
+      listitem &quot;↑ &quot;Guido van Rossum&quot; . Computer History Museum . Archived from the original on 3 July 2019 . Retrieved 22 February 2018 .&quot;
+        link[e365] &quot;↑&quot;
+        link[e366] &quot;&quot;Guido van Rossum&quot;&quot;
+        link[e367] &quot;Archived&quot;
+      listitem &quot;↑ &quot;David Chaum and Guido van Rossum awarded Dijkstra Fellowship&quot; . www.cwi.nl . Archived from the original on 21 March 2024 . Retrieved 21 March 2024 .&quot;
+        link[e368] &quot;↑&quot;
+        link[e369] &quot;&quot;David Chaum and Guido van Rossum awarded Dijkstra Fellowship&quot;&quot;
+        link[e370] &quot;Archived&quot;
+      listitem &quot;↑ &quot;NEC C&amp;C Foundation Awards 2023 C&amp;C Prize&quot; . nec.com . Tokyo. 10 October 2023. Archived from the original on 19 February 2024 . Retrieved 19 February 2024 .&quot;
+        link[e371] &quot;↑&quot;
+        link[e372] &quot;&quot;NEC C&amp;C Foundation Awards 2023 C&amp;C Prize&quot;&quot;
+        link[e373] &quot;Archived&quot;
+  region
+    heading &quot;External links&quot;
+    link[e374] &quot;edit&quot;
+    navigation &quot;Portals&quot;
+      listitem &quot;Free and open-source software portal&quot;
+        img
+        link[e375] &quot;Free and open-source software portal&quot;
+    link[e376]
+    link[e377] &quot;Guido van Rossum&quot;
+    list
+      listitem &quot;Official website&quot;
+        link[e378] &quot;Official website&quot;
+        link[e379]
+      listitem &quot;Guido van Rossum. The History of Python&quot;
+        link[e380] &quot;The History of Python&quot;
+      listitem &quot;Guido van Rossum. Neopythonic: Ramblings&quot;
+        link[e381] &quot;Neopythonic: Ramblings&quot;
+      listitem &quot;Computer Programming for Everybody&quot;
+        link[e382] &quot;Computer Programming for Everybody&quot;
+      listitem &quot;Guido van Rossum Interview on FLOSS Weekly&quot;
+        link[e383] &quot;Guido van Rossum Interview&quot;
+        link[e384] &quot;FLOSS Weekly&quot;
+      listitem &quot;Guido van Rossum interview – Workspiration.org&quot;
+        link[e385] &quot;Guido van Rossum interview&quot;
+      listitem &quot;Guido van Rossum on Python Interview – Computerworld&quot;
+        link[e386] &quot;Guido van Rossum on Python Interview&quot;
+        link[e387] &quot;Computerworld&quot;
+      listitem &quot;Guido van Rossum Run your web applications on Google&#x27;s infrastructure — Google App Engine technical talk at Stanford University . ( video archive )&quot;
+        link[e388] &quot;Run your web applications on Google&#x27;s infrastructure&quot;
+        link[e389] &quot;Google App Engine&quot;
+        link[e390] &quot;Stanford University&quot;
+        link[e391] &quot;video archive&quot;
+      listitem &quot;Oral History of Guido Van Rossum Part 1 on YouTube Computer History Museum&quot;
+        link[e392] &quot;Oral History of Guido Van Rossum Part 1&quot;
+        link[e393] &quot;YouTube&quot;
+        link[e394] &quot;Computer History Museum&quot;
+      listitem &quot;Oral History of Guido Van Rossum Part 2 on YouTube Computer History Museum&quot;
+        link[e395] &quot;Oral History of Guido Van Rossum Part 2&quot;
+        link[e396] &quot;YouTube&quot;
+        link[e397] &quot;Computer History Museum&quot;
+    navigation
+      table &quot;.mw-parser-output .navbar{display:inline;font-size:88%;font-weight:normal}.mw-parser-output .navbar-collapse{float:left;text-align:left}.mw-parser-output .navbar-boxtext{word-spacing:0}.mw-parser-output .navbar ul{display:inline-block;white-space:nowrap;line-height:inherit}.mw-parser-output .navbar…&quot;
+        row &quot;.mw-parser-output .navbar{display:inline;font-size:88%;font-weight:normal}.mw-parser-output .navbar-collapse{float:left;text-align:left}.mw-parser-output .navbar-boxtext{word-spacing:0}.mw-parser-output .navbar ul{display:inline-block;white-space:nowrap;line-height:inherit}.mw-parser-output .navbar…&quot;
+          columnheader &quot;.mw-parser-output .navbar{display:inline;font-size:88%;font-weight:normal}.mw-parser-output .navbar-collapse{float:left;text-align:left}.mw-parser-output .navbar-boxtext{word-spacing:0}.mw-parser-output .navbar ul{display:inline-block;white-space:nowrap;line-height:inherit}.mw-parser-output .navbar…&quot;
+            list
+              listitem &quot;v&quot;
+                link[e398] &quot;v&quot;
+              listitem &quot;t&quot;
+                link[e399] &quot;t&quot;
+              listitem &quot;e&quot;
+                link[e400] &quot;e&quot;
+            link[e401] &quot;Python&quot;
+        row &quot;Implementations CircuitPython CLPython CPython Cython MicroPython Numba IronPython Jython Psyco PyPy Python for S60 Shed Skin Stackless Python Unladen Swallow more ...&quot;
+          columnheader &quot;Implementations&quot;
+            link[e402] &quot;Implementations&quot;
+          cell &quot;CircuitPython CLPython CPython Cython MicroPython Numba IronPython Jython Psyco PyPy Python for S60 Shed Skin Stackless Python Unladen Swallow more ...&quot;
+            list
+              listitem &quot;CircuitPython&quot;
+                link[e403] &quot;CircuitPython&quot;
+              listitem &quot;CLPython&quot;
+                link[e404] &quot;CLPython&quot;
+              listitem &quot;CPython&quot;
+                link[e405] &quot;CPython&quot;
+              listitem &quot;Cython&quot;
+                link[e406] &quot;Cython&quot;
+              listitem &quot;MicroPython&quot;
+                link[e407] &quot;MicroPython&quot;
+              listitem &quot;Numba&quot;
+                link[e408] &quot;Numba&quot;
+              listitem &quot;IronPython&quot;
+                link[e409] &quot;IronPython&quot;
+              listitem &quot;Jython&quot;
+                link[e410] &quot;Jython&quot;
+              listitem &quot;Psyco&quot;
+                link[e411] &quot;Psyco&quot;
+              listitem &quot;PyPy&quot;
+                link[e412] &quot;PyPy&quot;
+              listitem &quot;Python for S60&quot;
+                link[e413] &quot;Python for S60&quot;
+              listitem &quot;Shed Skin&quot;
+                link[e414] &quot;Shed Skin&quot;
+              listitem &quot;Stackless Python&quot;
+                link[e415] &quot;Stackless Python&quot;
+              listitem &quot;Unladen Swallow&quot;
+                link[e416] &quot;Unladen Swallow&quot;
+              listitem &quot;more ...&quot;
+                link[e417] &quot;more&quot;
+          cell
+            link[e418]
+        row &quot;IDEs eric IDLE PyCharm PyDev Spyder more ...&quot;
+          columnheader &quot;IDEs&quot;
+            link[e419] &quot;IDEs&quot;
+          cell &quot;eric IDLE PyCharm PyDev Spyder more ...&quot;
+            list
+              listitem &quot;eric&quot;
+                link[e420] &quot;eric&quot;
+              listitem &quot;IDLE&quot;
+                link[e421] &quot;IDLE&quot;
+              listitem &quot;PyCharm&quot;
+                link[e422] &quot;PyCharm&quot;
+              listitem &quot;PyDev&quot;
+                link[e423] &quot;PyDev&quot;
+              listitem &quot;Spyder&quot;
+                link[e424] &quot;Spyder&quot;
+              listitem &quot;more ...&quot;
+                link[e425] &quot;more&quot;
+        row &quot;Topics WSGI ASGI History of Python Zen of Python&quot;
+          columnheader &quot;Topics&quot;
+          cell &quot;WSGI ASGI History of Python Zen of Python&quot;
+            list
+              listitem &quot;WSGI&quot;
+                link[e426] &quot;WSGI&quot;
+              listitem &quot;ASGI&quot;
+                link[e427] &quot;ASGI&quot;
+              listitem &quot;History of Python&quot;
+                link[e428] &quot;History of Python&quot;
+              listitem &quot;Zen of Python&quot;
+                link[e429] &quot;Zen of Python&quot;
+        row &quot;Designer Guido van Rossum&quot;
+          columnheader &quot;Designer&quot;
+            link[e430] &quot;Designer&quot;
+          cell &quot;Guido van Rossum&quot;
+            list
+              listitem &quot;Guido van Rossum&quot;
+                link[e431] &quot;Guido van Rossum&quot;
+        row &quot;Software (list) Python Software Foundation Python Conference (PyCon)&quot;
+          cell &quot;Software (list) Python Software Foundation Python Conference (PyCon)&quot;
+            list
+              listitem &quot;Software (list)&quot;
+                link[e432] &quot;Software&quot;
+              listitem &quot;Python Software Foundation&quot;
+                link[e433] &quot;Python Software Foundation&quot;
+              listitem &quot;Python Conference (PyCon)&quot;
+                link[e434] &quot;Python Conference&quot;
+    navigation
+      table &quot;Authority control databases International ISNI VIAF GND WorldCat National United States Japan Italy Netherlands Academics CiNii Association for Computing Machinery zbMATH DBLP Other Open Library&quot;
+        row &quot;Authority control databases&quot;
+          columnheader &quot;Authority control databases&quot;
+            link[e435] &quot;Authority control databases&quot;
+            link[e436]
+        row &quot;International ISNI VIAF GND WorldCat&quot;
+          columnheader &quot;International&quot;
+          cell &quot;ISNI VIAF GND WorldCat&quot;
+            list
+              listitem &quot;ISNI&quot;
+                link[e437] &quot;ISNI&quot;
+              listitem &quot;VIAF&quot;
+                link[e438] &quot;VIAF&quot;
+              listitem &quot;GND&quot;
+                link[e439] &quot;GND&quot;
+              listitem &quot;WorldCat&quot;
+                link[e440] &quot;WorldCat&quot;
+        row &quot;National United States Japan Italy Netherlands&quot;
+          columnheader &quot;National&quot;
+          cell &quot;United States Japan Italy Netherlands&quot;
+            list
+              listitem &quot;United States&quot;
+                link[e441] &quot;United States&quot;
+              listitem &quot;Japan&quot;
+                link[e442] &quot;Japan&quot;
+              listitem &quot;Italy&quot;
+                link[e443] &quot;Italy&quot;
+              listitem &quot;Netherlands&quot;
+                link[e444] &quot;Netherlands&quot;
+        row &quot;Academics CiNii Association for Computing Machinery zbMATH DBLP&quot;
+          columnheader &quot;Academics&quot;
+          cell &quot;CiNii Association for Computing Machinery zbMATH DBLP&quot;
+            list
+              listitem &quot;CiNii&quot;
+                link[e445] &quot;CiNii&quot;
+              listitem &quot;Association for Computing Machinery&quot;
+                link[e446] &quot;Association for Computing Machinery&quot;
+              listitem &quot;zbMATH&quot;
+                link[e447] &quot;zbMATH&quot;
+              listitem &quot;DBLP&quot;
+                link[e448] &quot;DBLP&quot;
+        row &quot;Other Open Library&quot;
+          columnheader &quot;Other&quot;
+          cell &quot;Open Library&quot;
+            list
+              listitem &quot;Open Library&quot;
+                link[e449] &quot;Open Library&quot;
+  link[e450] &quot;https://en.wikipedia.org/w/index.php?title=Guido_van_Rossum&amp;oldid=1358919486&quot;
+  link[e451] &quot;Categories&quot;
+  list
+    listitem &quot;1956 births&quot;
+      link[e452] &quot;1956 births&quot;
+    listitem &quot;Dutch computer programmers&quot;
+      link[e453] &quot;Dutch computer programmers&quot;
+    listitem &quot;Dutch computer scientists&quot;
+      link[e454] &quot;Dutch computer scientists&quot;
+    listitem &quot;Dutch emigrants to the United States&quot;
+      link[e455] &quot;Dutch emigrants to the United States&quot;
+    listitem &quot;Free software programmers&quot;
+      link[e456] &quot;Free software programmers&quot;
+    listitem &quot;Google employees&quot;
+      link[e457] &quot;Google employees&quot;
+    listitem &quot;Living people&quot;
+      link[e458] &quot;Living people&quot;
+    listitem &quot;Members of the Open Source Initiative board of directors&quot;
+      link[e459] &quot;Members of the Open Source Initiative board of directors&quot;
+    listitem &quot;Microsoft employees&quot;
+      link[e460] &quot;Microsoft employees&quot;
+    listitem &quot;People from Belmont, California&quot;
+      link[e461] &quot;People from Belmont, California&quot;
+    listitem &quot;People from Haarlem&quot;
+      link[e462] &quot;People from Haarlem&quot;
+    listitem &quot;Programming language designers&quot;
+      link[e463] &quot;Programming language designers&quot;
+    listitem &quot;Python (programming language) people&quot;
+      link[e464] &quot;Python (programming language) people&quot;
+    listitem &quot;University of Amsterdam alumni&quot;
+      link[e465] &quot;University of Amsterdam alumni&quot;
+    listitem &quot;Dutch software engineers&quot;
+      link[e466] &quot;Dutch software engineers&quot;
+  list
+    listitem &quot;Articles with short description&quot;
+      link[e467] &quot;Articles with short description&quot;
+    listitem &quot;Short description is different from Wikidata&quot;
+      link[e468] &quot;Short description is different from Wikidata&quot;
+    listitem &quot;Use dmy dates from January 2017&quot;
+      link[e469] &quot;Use dmy dates from January 2017&quot;
+    listitem &quot;Use Oxford spelling from June 2025&quot;
+      link[e470] &quot;Use Oxford spelling from June 2025&quot;
+    listitem &quot;All Wikipedia articles written in British English with Oxford spelling&quot;
+      link[e471] &quot;All Wikipedia articles written in British English with Oxford spelling&quot;
+    listitem &quot;Articles with hCards&quot;
+      link[e472] &quot;Articles with hCards&quot;
+    listitem &quot;Pages with Dutch IPA&quot;
+      link[e473] &quot;Pages with Dutch IPA&quot;
+    listitem &quot;All accuracy disputes&quot;
+      link[e474] &quot;All accuracy disputes&quot;
+    listitem &quot;Accuracy disputes from June 2022&quot;
+      link[e475] &quot;Accuracy disputes from June 2022&quot;
+    listitem &quot;Commons category link is on Wikidata&quot;
+      link[e476] &quot;Commons category link is on Wikidata&quot;
+contentinfo
+  list
+    listitem &quot;This page was last edited on 11 June 2026, at 20:52 (UTC) .&quot;
+    listitem &quot;Page was rendered with Parsoid .&quot;
+      link[e477] &quot;Parsoid&quot;
+    listitem &quot;Text is available under the Creative Commons Attribution-ShareAlike 4.0 License ; additional terms may apply. By using this site, you agree to the Terms of Use and Privacy Policy . Wikipedia® is a registered trademark of the Wikimedia Foundation, Inc. , a non-profit organization.&quot;
+      link[e478] &quot;Creative Commons Attribution-ShareAlike 4.0 License&quot;
+      link[e479] &quot;Terms of Use&quot;
+      link[e480] &quot;Privacy Policy&quot;
+      link[e481] &quot;Wikimedia Foundation, Inc.&quot;
+  list
+    listitem &quot;Privacy policy&quot;
+      link[e482] &quot;Privacy policy&quot;
+    listitem &quot;About Wikipedia&quot;
+      link[e483] &quot;About Wikipedia&quot;
+    listitem &quot;Disclaimers&quot;
+      link[e484] &quot;Disclaimers&quot;
+    listitem &quot;Contact Wikipedia&quot;
+      link[e485] &quot;Contact Wikipedia&quot;
+    listitem &quot;Legal &amp; safety contacts&quot;
+      link[e486] &quot;Legal &amp; safety contacts&quot;
+    listitem &quot;Code of Conduct&quot;
+      link[e487] &quot;Code of Conduct&quot;
+    listitem &quot;Developers&quot;
+      link[e488] &quot;Developers&quot;
+    listitem &quot;Statistics&quot;
+      link[e489] &quot;Statistics&quot;
+    listitem &quot;Cookie statement&quot;
+      link[e490] &quot;Cookie statement&quot;
+    listitem &quot;Mobile view&quot;
+      link[e491] &quot;Mobile view&quot;
+  list
+    listitem
+      link[e492]
+    listitem
+      link[e493]
+button[e494] &quot;Search&quot;
+search
+  form
+    textbox[e495] &quot;Search Wikipedia&quot;
+    button[e496] &quot;Search&quot;
+navigation &quot;Contents&quot;
+  checkbox[e497] &quot;Toggle the table of contents&quot;
+  label &quot;Toggle the table of contents&quot;
+link[e498]
+link[e499]
+link[e500]
+link[e501]
+link[e502]
+link[e503]
+link[e504]
+button[e505] &quot;51 languages&quot;
+link[e506] &quot;Add topic&quot;</pre>
+    <div class="step-meta">
+      <span class="action-pill">done — extracted &#x27;1956-01-31&#x27;</span>
+      <div class="token-line">this page: <b class="snap">9,430</b> snapshot tokens
+        vs <b class="raw">91,023</b> raw HTML tokens</div>
+      <div class="token-line">running total: <b class="snap">31,008</b> seen by agent
+        vs <b class="raw">299,778</b> raw HTML equivalent</div>
+    </div>
+  </div>
+</div>
+
+  <div class="payoff">
+    <div class="row">
+      <div class="stat">
+        <div class="label">task success rate</div>
+        <div class="value big ">10/10</div>
+      </div>
+      <div class="stat">
+        <div class="label">success %</div>
+        <div class="value big ">100%</div>
+      </div>
+    </div>
+    
+<div class="row">
+  <div class="stat">
+    <div class="label">mean token reduction, 20 pages</div>
+    <div class="value big">82%</div>
+  </div>
+</div>
+<div class="bars">
+<div class="bar-row">
+  <div class="bar-label"><span>https://en.wikipedia.org/wiki/Python_(programming_language)</span><span>375,626 → 45,141 tokens (88% cut)</span></div>
+  <div class="bar-track">
+    <div class="bar-fill raw" style="width:100.0%"></div>
+    <div class="bar-fill snapshot" style="width:12.0%"></div>
+  </div>
+</div>
+<div class="bar-row">
+  <div class="bar-label"><span>https://en.wikipedia.org/wiki/Guido_van_Rossum</span><span>91,023 → 9,430 tokens (90% cut)</span></div>
+  <div class="bar-track">
+    <div class="bar-fill raw" style="width:24.2%"></div>
+    <div class="bar-fill snapshot" style="width:2.5%"></div>
+  </div>
+</div>
+<div class="bar-row">
+  <div class="bar-label"><span>https://en.wikipedia.org/wiki/Web_scraping</span><span>81,369 → 10,140 tokens (88% cut)</span></div>
+  <div class="bar-track">
+    <div class="bar-fill raw" style="width:21.7%"></div>
+    <div class="bar-fill snapshot" style="width:2.7%"></div>
+  </div>
+</div>
+<div class="bar-row">
+  <div class="bar-label"><span>https://en.wikipedia.org/wiki/HTML</span><span>299,894 → 42,241 tokens (86% cut)</span></div>
+  <div class="bar-track">
+    <div class="bar-fill raw" style="width:79.8%"></div>
+    <div class="bar-fill snapshot" style="width:11.2%"></div>
+  </div>
+</div>
+<div class="bar-row">
+  <div class="bar-label"><span>https://en.wikipedia.org/wiki/Main_Page</span><span>89,581 → 9,516 tokens (89% cut)</span></div>
+  <div class="bar-track">
+    <div class="bar-fill raw" style="width:23.8%"></div>
+    <div class="bar-fill snapshot" style="width:2.5%"></div>
+  </div>
+</div>
+<div class="bar-row">
+  <div class="bar-label"><span>https://en.wikipedia.org/wiki/World_Wide_Web</span><span>279,949 → 34,633 tokens (88% cut)</span></div>
+  <div class="bar-track">
+    <div class="bar-fill raw" style="width:74.5%"></div>
+    <div class="bar-fill snapshot" style="width:9.2%"></div>
+  </div>
+</div>
+<div class="bar-row">
+  <div class="bar-label"><span>https://en.wikipedia.org/wiki/Hypertext_Transfer_Protocol</span><span>229,483 → 32,935 tokens (86% cut)</span></div>
+  <div class="bar-track">
+    <div class="bar-fill raw" style="width:61.1%"></div>
+    <div class="bar-fill snapshot" style="width:8.8%"></div>
+  </div>
+</div>
+<div class="bar-row">
+  <div class="bar-label"><span>https://en.wikipedia.org/wiki/Accessibility</span><span>156,404 → 20,024 tokens (87% cut)</span></div>
+  <div class="bar-track">
+    <div class="bar-fill raw" style="width:41.6%"></div>
+    <div class="bar-fill snapshot" style="width:5.3%"></div>
+  </div>
+</div>
+<div class="bar-row">
+  <div class="bar-label"><span>https://en.wikipedia.org/wiki/ARIA</span><span>109,022 → 19,623 tokens (82% cut)</span></div>
+  <div class="bar-track">
+    <div class="bar-fill raw" style="width:29.0%"></div>
+    <div class="bar-fill snapshot" style="width:5.2%"></div>
+  </div>
+</div>
+<div class="bar-row">
+  <div class="bar-label"><span>https://en.wikipedia.org/wiki/JSON</span><span>177,389 → 23,519 tokens (87% cut)</span></div>
+  <div class="bar-track">
+    <div class="bar-fill raw" style="width:47.2%"></div>
+    <div class="bar-fill snapshot" style="width:6.3%"></div>
+  </div>
+</div>
+<div class="bar-row">
+  <div class="bar-label"><span>https://en.wikipedia.org/wiki/REST</span><span>63,399 → 8,529 tokens (87% cut)</span></div>
+  <div class="bar-track">
+    <div class="bar-fill raw" style="width:16.9%"></div>
+    <div class="bar-fill snapshot" style="width:2.3%"></div>
+  </div>
+</div>
+<div class="bar-row">
+  <div class="bar-label"><span>https://en.wikipedia.org/wiki/Web_accessibility</span><span>177,631 → 23,246 tokens (87% cut)</span></div>
+  <div class="bar-track">
+    <div class="bar-fill raw" style="width:47.3%"></div>
+    <div class="bar-fill snapshot" style="width:6.2%"></div>
+  </div>
+</div>
+<div class="bar-row">
+  <div class="bar-label"><span>https://docs.python.org/3/</span><span>6,605 → 2,021 tokens (69% cut)</span></div>
+  <div class="bar-track">
+    <div class="bar-fill raw" style="width:1.8%"></div>
+    <div class="bar-fill snapshot" style="width:0.5%"></div>
+  </div>
+</div>
+<div class="bar-row">
+  <div class="bar-label"><span>https://docs.python.org/3/library/html.parser.html</span><span>20,403 → 2,686 tokens (87% cut)</span></div>
+  <div class="bar-track">
+    <div class="bar-fill raw" style="width:5.4%"></div>
+    <div class="bar-fill snapshot" style="width:0.7%"></div>
+  </div>
+</div>
+<div class="bar-row">
+  <div class="bar-label"><span>https://www.python.org/</span><span>17,338 → 4,357 tokens (75% cut)</span></div>
+  <div class="bar-track">
+    <div class="bar-fill raw" style="width:4.6%"></div>
+    <div class="bar-fill snapshot" style="width:1.2%"></div>
+  </div>
+</div>
+<div class="bar-row">
+  <div class="bar-label"><span>https://www.python.org/about/</span><span>12,911 → 3,461 tokens (73% cut)</span></div>
+  <div class="bar-track">
+    <div class="bar-fill raw" style="width:3.4%"></div>
+    <div class="bar-fill snapshot" style="width:0.9%"></div>
+  </div>
+</div>
+<div class="bar-row">
+  <div class="bar-label"><span>https://news.ycombinator.com/</span><span>14,343 → 4,714 tokens (67% cut)</span></div>
+  <div class="bar-track">
+    <div class="bar-fill raw" style="width:3.8%"></div>
+    <div class="bar-fill snapshot" style="width:1.3%"></div>
+  </div>
+</div>
+<div class="bar-row">
+  <div class="bar-label"><span>https://developer.mozilla.org/en-US/docs/Web/HTML</span><span>60,000 → 8,072 tokens (87% cut)</span></div>
+  <div class="bar-track">
+    <div class="bar-fill raw" style="width:16.0%"></div>
+    <div class="bar-fill snapshot" style="width:2.1%"></div>
+  </div>
+</div>
+<div class="bar-row">
+  <div class="bar-label"><span>https://www.gutenberg.org/</span><span>6,910 → 1,585 tokens (77% cut)</span></div>
+  <div class="bar-track">
+    <div class="bar-fill raw" style="width:1.8%"></div>
+    <div class="bar-fill snapshot" style="width:0.4%"></div>
+  </div>
+</div>
+<div class="bar-row">
+  <div class="bar-label"><span>https://www.w3.org/standards/webdesign/accessibility</span><span>7,630 → 2,390 tokens (69% cut)</span></div>
+  <div class="bar-track">
+    <div class="bar-fill raw" style="width:2.0%"></div>
+    <div class="bar-fill snapshot" style="width:0.6%"></div>
+  </div>
+</div></div>
+  </div>
+
+  <footer>barebrowse — stdlib-only HTML→ARIA snapshot engine + ref-driven browser + autonomous agent loop</footer>
+</div>
+<script>
+function countUp(el, target, ms) {
+  var start = null;
+  function step(ts) {
+    if (start === null) start = ts;
+    var p = Math.min(1, (ts - start) / ms);
+    el.textContent = Math.round(p * target).toLocaleString();
+    if (p < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+document.addEventListener('DOMContentLoaded', function () {
+  document.querySelectorAll('[data-countup]').forEach(function (el) {
+    countUp(el, parseInt(el.getAttribute('data-countup'), 10), 1400);
+  });
+});
+</script>
+</body>
+</html>

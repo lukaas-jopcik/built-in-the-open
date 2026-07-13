@@ -1,0 +1,10 @@
+{
+  "name": "wikipedia-fact-finder",
+  "description": "Search Wikipedia for the creator of the Python programming language, follow the correct search-result link, and extract his birth date.",
+  "start_url": "https://en.wikipedia.org/wiki/Main_Page",
+  "query": "creator of the Python programming language",
+  "target_substring": "Guido van Rossum",
+  "extract_regex": "\\(\\s*(\\d{4}-\\d{2}-\\d{2})\\s*\\)",
+  "max_steps": 6,
+  "ollama_model": "llama3.2"
+}

@@ -1,0 +1,149 @@
+{
+  "pages": [
+    {
+      "url": "https://en.wikipedia.org/wiki/Python_(programming_language)",
+      "final_url": "https://en.wikipedia.org/wiki/Python_(programming_language)",
+      "raw_tokens": 375626,
+      "snapshot_tokens": 45141,
+      "reduction_pct": 87.9824612779733
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/Guido_van_Rossum",
+      "final_url": "https://en.wikipedia.org/wiki/Guido_van_Rossum",
+      "raw_tokens": 91023,
+      "snapshot_tokens": 9430,
+      "reduction_pct": 89.63998110367709
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/Web_scraping",
+      "final_url": "https://en.wikipedia.org/wiki/Web_scraping",
+      "raw_tokens": 81369,
+      "snapshot_tokens": 10140,
+      "reduction_pct": 87.53825166832577
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/HTML",
+      "final_url": "https://en.wikipedia.org/wiki/HTML",
+      "raw_tokens": 299894,
+      "snapshot_tokens": 42241,
+      "reduction_pct": 85.91468985708283
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/Main_Page",
+      "final_url": "https://en.wikipedia.org/wiki/Main_Page",
+      "raw_tokens": 89581,
+      "snapshot_tokens": 9516,
+      "reduction_pct": 89.37721168551367
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/World_Wide_Web",
+      "final_url": "https://en.wikipedia.org/wiki/World_Wide_Web",
+      "raw_tokens": 279949,
+      "snapshot_tokens": 34633,
+      "reduction_pct": 87.62881810615505
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/Hypertext_Transfer_Protocol",
+      "final_url": "https://en.wikipedia.org/wiki/Hypertext_Transfer_Protocol",
+      "raw_tokens": 229483,
+      "snapshot_tokens": 32935,
+      "reduction_pct": 85.6481743745724
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/Accessibility",
+      "final_url": "https://en.wikipedia.org/wiki/Accessibility",
+      "raw_tokens": 156404,
+      "snapshot_tokens": 20024,
+      "reduction_pct": 87.19725838213857
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/ARIA",
+      "final_url": "https://en.wikipedia.org/wiki/ARIA",
+      "raw_tokens": 109022,
+      "snapshot_tokens": 19623,
+      "reduction_pct": 82.00088055621801
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/JSON",
+      "final_url": "https://en.wikipedia.org/wiki/JSON",
+      "raw_tokens": 177389,
+      "snapshot_tokens": 23519,
+      "reduction_pct": 86.74156796644662
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/REST",
+      "final_url": "https://en.wikipedia.org/wiki/REST",
+      "raw_tokens": 63399,
+      "snapshot_tokens": 8529,
+      "reduction_pct": 86.54710642123693
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/Web_accessibility",
+      "final_url": "https://en.wikipedia.org/wiki/Web_accessibility",
+      "raw_tokens": 177631,
+      "snapshot_tokens": 23246,
+      "reduction_pct": 86.913320310081
+    },
+    {
+      "url": "https://docs.python.org/3/",
+      "final_url": "https://docs.python.org/3/",
+      "raw_tokens": 6605,
+      "snapshot_tokens": 2021,
+      "reduction_pct": 69.40196820590462
+    },
+    {
+      "url": "https://docs.python.org/3/library/html.parser.html",
+      "final_url": "https://docs.python.org/3/library/html.parser.html",
+      "raw_tokens": 20403,
+      "snapshot_tokens": 2686,
+      "reduction_pct": 86.83526932313876
+    },
+    {
+      "url": "https://www.python.org/",
+      "final_url": "https://www.python.org/",
+      "raw_tokens": 17338,
+      "snapshot_tokens": 4357,
+      "reduction_pct": 74.87022724651055
+    },
+    {
+      "url": "https://www.python.org/about/",
+      "final_url": "https://www.python.org/about/",
+      "raw_tokens": 12911,
+      "snapshot_tokens": 3461,
+      "reduction_pct": 73.19340097591201
+    },
+    {
+      "url": "https://news.ycombinator.com/",
+      "final_url": "https://news.ycombinator.com/",
+      "raw_tokens": 14343,
+      "snapshot_tokens": 4714,
+      "reduction_pct": 67.13379348811267
+    },
+    {
+      "url": "https://developer.mozilla.org/en-US/docs/Web/HTML",
+      "final_url": "https://developer.mozilla.org/en-US/docs/Web/HTML",
+      "raw_tokens": 60000,
+      "snapshot_tokens": 8072,
+      "reduction_pct": 86.54666666666667
+    },
+    {
+      "url": "https://www.gutenberg.org/",
+      "final_url": "https://www.gutenberg.org/",
+      "raw_tokens": 6910,
+      "snapshot_tokens": 1585,
+      "reduction_pct": 77.06222865412445
+    },
+    {
+      "url": "https://www.w3.org/standards/webdesign/accessibility",
+      "final_url": "https://www.w3.org/mission/accessibility/",
+      "raw_tokens": 7630,
+      "snapshot_tokens": 2390,
+      "reduction_pct": 68.67627785058978
+    }
+  ],
+  "num_pages": 20,
+  "num_requested": 20,
+  "mean_reduction_pct": 82.34247770601904,
+  "total_raw_tokens": 2276910,
+  "total_snapshot_tokens": 308263
+}

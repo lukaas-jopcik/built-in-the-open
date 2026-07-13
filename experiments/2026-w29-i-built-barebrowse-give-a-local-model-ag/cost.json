@@ -1,0 +1,7 @@
+{
+  "experiment": "2026-w29-i-built-barebrowse-give-a-local-model-ag",
+  "cost_usd": 13.405,
+  "claude_runs": 23,
+  "window_from": "2026-07-13 11:42:33",
+  "note": "from cost.jsonl purpose=exp_* (subscription runs log $0)"
+}

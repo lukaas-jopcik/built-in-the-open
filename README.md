@@ -14,8 +14,9 @@ Every week an autonomous engine picks one wave worth riding, builds it, measures
 
 | Week | Experiment | Verdict | Key number | Cost | |
 |:--|:--|:--|:--|--:|:--|
-| 2026-W29 | **[firecrawl/firecrawl — The API to search, scrape, and interact with the](experiments/2026-w29-firecrawl-firecrawl-the-api-to-search-sc/)** | 🟢 worked | 24/24 tests passing in 1.226s (`python3 -m unittest discover -s tests -v`) | $6.01 | [code →](experiments/2026-w29-firecrawl-firecrawl-the-api-to-search-sc/) |
-| 2026-W28 | **[Have your agent record video demos of its work with shot-scraper video](experiments/2026-w28-have-your-agent-record-video-demos-of-it/)** | 🟢 worked | Toy demo: 5.0s video, 1280×800 H.264, ~68KB, 6/6 runs succeeded this session… | $14.42 | [code →](experiments/2026-w28-have-your-agent-record-video-demos-of-it/) |
+| 2026-W29 | **[firecrawl/firecrawl — The API to search, scrape, and interact with the](experiments/2026-w29-firecrawl-firecrawl-the-api-to-search-sc/)** | 🟢 worked | 24/24 tests passing in 1.226s (`python3 -m unittest discover -s tests -v`) | $13.26 | [code →](experiments/2026-w29-firecrawl-firecrawl-the-api-to-search-sc/) |
+| 2026-W29 | **[I built barebrowse: give a local-model agent a browser without Playwri](experiments/2026-w29-i-built-barebrowse-give-a-local-model-ag/)** | 🟡 partial | — | $13.40 | [code →](experiments/2026-w29-i-built-barebrowse-give-a-local-model-ag/) |
+| 2026-W28 | **[Have your agent record video demos of its work with shot-scraper video](experiments/2026-w28-have-your-agent-record-video-demos-of-it/)** | 🟢 worked | Toy demo: 5.0s video, 1280×800 H.264, ~68KB, 6/6 runs succeeded this session… | $21.67 | [code →](experiments/2026-w28-have-your-agent-record-video-demos-of-it/) |
 
 ## How to read an experiment
 
