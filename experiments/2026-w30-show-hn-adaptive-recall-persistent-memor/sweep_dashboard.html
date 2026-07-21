@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Adaptive Recall Bench &mdash; Parameter Sweep</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;700&family=Inter:wght@400;600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --burgundy: #7E1621;
+    --cream: #F2E8D6;
+    --periwinkle: #AEC3E8;
+    --fail: #C4432B;
+    --ink: #241012;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--cream);
+    color: var(--ink);
+    font-family: 'Inter', system-ui, sans-serif;
+    padding: 2.5rem 3rem 4rem;
+  }
+  h1 {
+    font-family: 'Fraunces', Georgia, serif;
+    font-weight: 700;
+    font-size: 2.1rem;
+    color: var(--burgundy);
+    margin: 0 0 0.15rem;
+    letter-spacing: -0.01em;
+  }
+  .subtitle {
+    font-size: 0.95rem;
+    color: #5b4a4d;
+    margin: 0 0 2rem;
+  }
+  .subtitle code {
+    font-family: 'JetBrains Mono', monospace;
+    background: rgba(126,22,33,0.08);
+    padding: 0.05rem 0.35rem;
+    border-radius: 4px;
+  }
+
+  .callouts { display: flex; gap: 1.5rem; margin-bottom: 2rem; flex-wrap: wrap; }
+  .callout {
+    background: #fff9ef;
+    border: 1px solid rgba(126,22,33,0.15);
+    border-radius: 14px;
+    padding: 1rem 1.5rem;
+    min-width: 240px;
+    box-shadow: 0 2px 0 rgba(126,22,33,0.06);
+  }
+  .callout .label {
+    font-family: 'Fraunces', serif;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #5b4a4d;
+    margin-bottom: 0.3rem;
+  }
+  .callout .value {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    font-size: 1.6rem;
+    color: var(--burgundy);
+  }
+  .callout.worst .value { color: var(--fail); }
+
+  .panel {
+    background: #ffffffaa;
+    border-radius: 16px;
+    padding: 1.75rem 2rem 1.25rem;
+    border: 1px solid rgba(126,22,33,0.1);
+    margin-bottom: 2rem;
+  }
+  .panel h2 {
+    font-family: 'Fraunces', serif;
+    font-size: 1.05rem;
+    margin: 0 0 0.2rem;
+    color: var(--burgundy);
+  }
+  .panel .caption {
+    font-size: 0.8rem;
+    color: #8a7477;
+    margin: 0 0 1.1rem;
+  }
+
+  svg { display: block; }
+  .axis-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    fill: #5b4a4d;
+  }
+  .line-path {
+    fill: none;
+    stroke-width: 2.5;
+    stroke-dasharray: 900;
+    stroke-dashoffset: 900;
+    animation: draw 1.1s ease-out forwards;
+  }
+  @keyframes draw { to { stroke-dashoffset: 0; } }
+  .dot {
+    opacity: 0;
+    animation: pop 0.3s ease-out forwards;
+  }
+  @keyframes pop { from { opacity: 0; transform: scale(0.3); } to { opacity: 1; transform: scale(1); } }
+  .legend-item { font-family: 'JetBrains Mono', monospace; font-size: 11px; }
+
+  .heat-grid {
+    display: grid;
+    gap: 6px;
+  }
+  .heat-row { display: flex; align-items: center; gap: 6px; }
+  .heat-row-label {
+    width: 90px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: #5b4a4d;
+    text-align: right;
+    flex-shrink: 0;
+  }
+  .heat-cell {
+    flex: 1;
+    aspect-ratio: 2.2;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--ink);
+    opacity: 0;
+    transform: scale(0.7);
+    animation: reveal 0.3s ease-out forwards;
+  }
+  @keyframes reveal { to { opacity: 1; transform: scale(1); } }
+  .heat-col-labels { display: flex; gap: 6px; margin-left: 96px; margin-bottom: 4px; }
+  .heat-col-label {
+    flex: 1;
+    text-align: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: #5b4a4d;
+  }
+
+  footer {
+    margin-top: 1rem;
+    font-size: 0.78rem;
+    color: #8a7477;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  a.back { color: var(--burgundy); }
+</style>
+</head>
+<body>
+
+<h1>Parameter Sensitivity Sweep</h1>
+<p class="subtitle">
+  same <span id="meta-line">50 conversations / 150 queries</span> as the main benchmark &middot;
+  sweeping <code>half_life_sessions</code> (recency decay) &times; <code>keyword_weight</code> (keyword/recency blend) &middot;
+  <a class="back" href="dashboard.html">&larr; back to the wow shot</a> &middot;
+  <a class="back" href="memory_graph.html">memory graph &rarr;</a>
+</p>
+
+<div class="callouts">
+  <div class="callout best">
+    <div class="label">Best combo</div>
+    <div class="value" id="best-value">&mdash;</div>
+  </div>
+  <div class="callout worst">
+    <div class="label">Worst combo</div>
+    <div class="value" id="worst-value">&mdash;</div>
+  </div>
+  <div class="callout">
+    <div class="label">Default (main dashboard)</div>
+    <div class="value" id="default-value">&mdash;</div>
+  </div>
+</div>
+
+<div class="panel">
+  <h2>Accuracy vs. recency half-life, one line per keyword weight</h2>
+  <p class="caption">x-axis: half_life_sessions (how many simulated sessions until recency score halves) &middot; y-axis: adaptive-recall accuracy</p>
+  <svg id="chart" width="820" height="360" viewBox="0 0 820 360"></svg>
+  <div id="legend" style="display:flex; gap:1.5rem; margin-top:0.5rem;"></div>
+</div>
+
+<div class="panel">
+  <h2>Same data as a heatmap</h2>
+  <p class="caption">rows: half-life &middot; columns: keyword weight &middot; darker periwinkle = higher accuracy</p>
+  <div id="heat-col-labels" class="heat-col-labels"></div>
+  <div class="heat-grid" id="heat-grid"></div>
+</div>
+
+<footer id="footer-line">seed &mdash;</footer>
+
+<script>
+const DATA = {"seed": 42, "num_conversations": 50, "total_queries": 150, "half_lives": [5.0, 10.0, 20.0, 50.0], "keyword_weights": [0.2, 0.4, 0.6, 0.8], "default_point": {"half_life_sessions": 10.0, "keyword_weight": 0.6}, "cells": [{"half_life_sessions": 5.0, "keyword_weight": 0.2, "recency_weight": 0.8, "correct": 84, "total": 150, "accuracy": 0.56}, {"half_life_sessions": 5.0, "keyword_weight": 0.4, "recency_weight": 0.6, "correct": 107, "total": 150, "accuracy": 0.7133}, {"half_life_sessions": 5.0, "keyword_weight": 0.6, "recency_weight": 0.4, "correct": 132, "total": 150, "accuracy": 0.88}, {"half_life_sessions": 5.0, "keyword_weight": 0.8, "recency_weight": 0.2, "correct": 135, "total": 150, "accuracy": 0.9}, {"half_life_sessions": 10.0, "keyword_weight": 0.2, "recency_weight": 0.8, "correct": 77, "total": 150, "accuracy": 0.5133}, {"half_life_sessions": 10.0, "keyword_weight": 0.4, "recency_weight": 0.6, "correct": 122, "total": 150, "accuracy": 0.8133}, {"half_life_sessions": 10.0, "keyword_weight": 0.6, "recency_weight": 0.4, "correct": 139, "total": 150, "accuracy": 0.9267}, {"half_life_sessions": 10.0, "keyword_weight": 0.8, "recency_weight": 0.2, "correct": 135, "total": 150, "accuracy": 0.9}, {"half_life_sessions": 20.0, "keyword_weight": 0.2, "recency_weight": 0.8, "correct": 90, "total": 150, "accuracy": 0.6}, {"half_life_sessions": 20.0, "keyword_weight": 0.4, "recency_weight": 0.6, "correct": 138, "total": 150, "accuracy": 0.92}, {"half_life_sessions": 20.0, "keyword_weight": 0.6, "recency_weight": 0.4, "correct": 135, "total": 150, "accuracy": 0.9}, {"half_life_sessions": 20.0, "keyword_weight": 0.8, "recency_weight": 0.2, "correct": 135, "total": 150, "accuracy": 0.9}, {"half_life_sessions": 50.0, "keyword_weight": 0.2, "recency_weight": 0.8, "correct": 133, "total": 150, "accuracy": 0.8867}, {"half_life_sessions": 50.0, "keyword_weight": 0.4, "recency_weight": 0.6, "correct": 135, "total": 150, "accuracy": 0.9}, {"half_life_sessions": 50.0, "keyword_weight": 0.6, "recency_weight": 0.4, "correct": 135, "total": 150, "accuracy": 0.9}, {"half_life_sessions": 50.0, "keyword_weight": 0.8, "recency_weight": 0.2, "correct": 135, "total": 150, "accuracy": 0.9}], "best": {"half_life_sessions": 10.0, "keyword_weight": 0.6, "recency_weight": 0.4, "correct": 139, "total": 150, "accuracy": 0.9267}, "worst": {"half_life_sessions": 10.0, "keyword_weight": 0.2, "recency_weight": 0.8, "correct": 77, "total": 150, "accuracy": 0.5133}};
+const BURGUNDY = '#7E1621';
+const PERIWINKLE = '#AEC3E8';
+const LINE_COLORS = ['#7E1621', '#AEC3E8', '#C4432B', '#5b4a4d'];
+
+function cellFor(halfLife, kwWeight) {
+  return DATA.cells.find(c => c.half_life_sessions === halfLife && c.keyword_weight === kwWeight);
+}
+
+function drawChart() {
+  const svg = document.getElementById('chart');
+  const legend = document.getElementById('legend');
+  const W = 820, H = 360, padL = 50, padR = 20, padT = 20, padB = 40;
+  const plotW = W - padL - padR, plotH = H - padT - padB;
+
+  const halfLives = DATA.half_lives;
+  const xFor = i => padL + (i / (halfLives.length - 1)) * plotW;
+  const yFor = acc => padT + plotH - acc * plotH;
+
+  // axes
+  let svgContent = '';
+  for (let g = 0; g <= 5; g++) {
+    const acc = g / 5;
+    const y = yFor(acc);
+    svgContent += `<line x1="${padL}" y1="${y}" x2="${W - padR}" y2="${y}" stroke="#e8ddc8" stroke-width="1"/>`;
+    svgContent += `<text class="axis-label" x="${padL - 8}" y="${y + 4}" text-anchor="end">${Math.round(acc * 100)}%</text>`;
+  }
+  halfLives.forEach((hl, i) => {
+    const x = xFor(i);
+    svgContent += `<text class="axis-label" x="${x}" y="${H - padB + 20}" text-anchor="middle">${hl}</text>`;
+  });
+  svgContent += `<text class="axis-label" x="${W / 2}" y="${H - 4}" text-anchor="middle">half_life_sessions</text>`;
+
+  DATA.keyword_weights.forEach((kw, ki) => {
+    const color = LINE_COLORS[ki % LINE_COLORS.length];
+    const points = halfLives.map((hl, i) => {
+      const cell = cellFor(hl, kw);
+      return [xFor(i), yFor(cell.accuracy)];
+    });
+    const path = points.map((p, i) => (i === 0 ? 'M' : 'L') + p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' ');
+    svgContent += `<path class="line-path" d="${path}" stroke="${color}" style="animation-delay:${ki * 150}ms"/>`;
+    points.forEach(([x, y], i) => {
+      svgContent += `<circle class="dot" cx="${x}" cy="${y}" r="4.5" fill="${color}" style="animation-delay:${ki * 150 + i * 80 + 300}ms"/>`;
+    });
+
+    const item = document.createElement('div');
+    item.className = 'legend-item';
+    item.innerHTML = `<span style="display:inline-block;width:10px;height:10px;background:${color};border-radius:2px;margin-right:5px;"></span>keyword_weight=${kw}`;
+    legend.appendChild(item);
+  });
+
+  svg.innerHTML = svgContent;
+}
+
+function accuracyColor(acc) {
+  // interpolate cream -> periwinkle -> burgundy across the observed range
+  const t = acc; // 0..1
+  const lerp = (a, b, t) => Math.round(a + (b - a) * t);
+  if (t < 0.5) {
+    const t2 = t / 0.5;
+    const from = [232, 221, 200]; // cream-ish
+    const to = [174, 195, 232]; // periwinkle
+    return `rgb(${lerp(from[0], to[0], t2)},${lerp(from[1], to[1], t2)},${lerp(from[2], to[2], t2)})`;
+  } else {
+    const t2 = (t - 0.5) / 0.5;
+    const from = [174, 195, 232]; // periwinkle
+    const to = [126, 22, 33]; // burgundy
+    return `rgb(${lerp(from[0], to[0], t2)},${lerp(from[1], to[1], t2)},${lerp(from[2], to[2], t2)})`;
+  }
+}
+
+function drawHeatmap() {
+  const colLabels = document.getElementById('heat-col-labels');
+  const grid = document.getElementById('heat-grid');
+  DATA.keyword_weights.forEach(kw => {
+    const label = document.createElement('div');
+    label.className = 'heat-col-label';
+    label.textContent = 'kw=' + kw;
+    colLabels.appendChild(label);
+  });
+
+  let delay = 0;
+  DATA.half_lives.forEach(hl => {
+    const row = document.createElement('div');
+    row.className = 'heat-row';
+    const rowLabel = document.createElement('div');
+    rowLabel.className = 'heat-row-label';
+    rowLabel.textContent = 'hl=' + hl;
+    row.appendChild(rowLabel);
+
+    DATA.keyword_weights.forEach(kw => {
+      const cell = cellFor(hl, kw);
+      const cellEl = document.createElement('div');
+      cellEl.className = 'heat-cell';
+      cellEl.style.animationDelay = delay + 'ms';
+      cellEl.style.background = accuracyColor(cell.accuracy);
+      const light = cell.accuracy > 0.55;
+      cellEl.style.color = light ? '#fff9ef' : '#241012';
+      cellEl.textContent = Math.round(cell.accuracy * 100) + '%';
+      cellEl.title = `half_life=${hl}, keyword_weight=${kw} -> ${cell.correct}/${cell.total}`;
+      row.appendChild(cellEl);
+      delay += 25;
+    });
+
+    grid.appendChild(row);
+  });
+}
+
+function init() {
+  document.getElementById('meta-line').textContent =
+    DATA.num_conversations + ' conversations / ' + DATA.total_queries + ' queries';
+  document.getElementById('best-value').textContent =
+    `hl=${DATA.best.half_life_sessions} kw=${DATA.best.keyword_weight} → ${Math.round(DATA.best.accuracy * 100)}%`;
+  document.getElementById('worst-value').textContent =
+    `hl=${DATA.worst.half_life_sessions} kw=${DATA.worst.keyword_weight} → ${Math.round(DATA.worst.accuracy * 100)}%`;
+  const defaultCell = cellFor(DATA.default_point.half_life_sessions, DATA.default_point.keyword_weight);
+  document.getElementById('default-value').textContent =
+    `hl=${DATA.default_point.half_life_sessions} kw=${DATA.default_point.keyword_weight} → ${defaultCell ? Math.round(defaultCell.accuracy * 100) : '?'}%`;
+  document.getElementById('footer-line').textContent =
+    'seed ' + DATA.seed + ' · ' + DATA.cells.length + ' parameter combinations swept';
+
+  drawChart();
+  drawHeatmap();
+}
+
+init();
+</script>
+</body>
+</html>

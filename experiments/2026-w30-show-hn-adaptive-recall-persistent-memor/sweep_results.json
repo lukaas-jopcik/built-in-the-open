@@ -1,0 +1,167 @@
+{
+  "seed": 42,
+  "num_conversations": 50,
+  "total_queries": 150,
+  "half_lives": [
+    5.0,
+    10.0,
+    20.0,
+    50.0
+  ],
+  "keyword_weights": [
+    0.2,
+    0.4,
+    0.6,
+    0.8
+  ],
+  "default_point": {
+    "half_life_sessions": 10.0,
+    "keyword_weight": 0.6
+  },
+  "cells": [
+    {
+      "half_life_sessions": 5.0,
+      "keyword_weight": 0.2,
+      "recency_weight": 0.8,
+      "correct": 84,
+      "total": 150,
+      "accuracy": 0.56
+    },
+    {
+      "half_life_sessions": 5.0,
+      "keyword_weight": 0.4,
+      "recency_weight": 0.6,
+      "correct": 107,
+      "total": 150,
+      "accuracy": 0.7133
+    },
+    {
+      "half_life_sessions": 5.0,
+      "keyword_weight": 0.6,
+      "recency_weight": 0.4,
+      "correct": 132,
+      "total": 150,
+      "accuracy": 0.88
+    },
+    {
+      "half_life_sessions": 5.0,
+      "keyword_weight": 0.8,
+      "recency_weight": 0.2,
+      "correct": 135,
+      "total": 150,
+      "accuracy": 0.9
+    },
+    {
+      "half_life_sessions": 10.0,
+      "keyword_weight": 0.2,
+      "recency_weight": 0.8,
+      "correct": 77,
+      "total": 150,
+      "accuracy": 0.5133
+    },
+    {
+      "half_life_sessions": 10.0,
+      "keyword_weight": 0.4,
+      "recency_weight": 0.6,
+      "correct": 122,
+      "total": 150,
+      "accuracy": 0.8133
+    },
+    {
+      "half_life_sessions": 10.0,
+      "keyword_weight": 0.6,
+      "recency_weight": 0.4,
+      "correct": 139,
+      "total": 150,
+      "accuracy": 0.9267
+    },
+    {
+      "half_life_sessions": 10.0,
+      "keyword_weight": 0.8,
+      "recency_weight": 0.2,
+      "correct": 135,
+      "total": 150,
+      "accuracy": 0.9
+    },
+    {
+      "half_life_sessions": 20.0,
+      "keyword_weight": 0.2,
+      "recency_weight": 0.8,
+      "correct": 90,
+      "total": 150,
+      "accuracy": 0.6
+    },
+    {
+      "half_life_sessions": 20.0,
+      "keyword_weight": 0.4,
+      "recency_weight": 0.6,
+      "correct": 138,
+      "total": 150,
+      "accuracy": 0.92
+    },
+    {
+      "half_life_sessions": 20.0,
+      "keyword_weight": 0.6,
+      "recency_weight": 0.4,
+      "correct": 135,
+      "total": 150,
+      "accuracy": 0.9
+    },
+    {
+      "half_life_sessions": 20.0,
+      "keyword_weight": 0.8,
+      "recency_weight": 0.2,
+      "correct": 135,
+      "total": 150,
+      "accuracy": 0.9
+    },
+    {
+      "half_life_sessions": 50.0,
+      "keyword_weight": 0.2,
+      "recency_weight": 0.8,
+      "correct": 133,
+      "total": 150,
+      "accuracy": 0.8867
+    },
+    {
+      "half_life_sessions": 50.0,
+      "keyword_weight": 0.4,
+      "recency_weight": 0.6,
+      "correct": 135,
+      "total": 150,
+      "accuracy": 0.9
+    },
+    {
+      "half_life_sessions": 50.0,
+      "keyword_weight": 0.6,
+      "recency_weight": 0.4,
+      "correct": 135,
+      "total": 150,
+      "accuracy": 0.9
+    },
+    {
+      "half_life_sessions": 50.0,
+      "keyword_weight": 0.8,
+      "recency_weight": 0.2,
+      "correct": 135,
+      "total": 150,
+      "accuracy": 0.9
+    }
+  ],
+  "best": {
+    "half_life_sessions": 10.0,
+    "keyword_weight": 0.6,
+    "recency_weight": 0.4,
+    "correct": 139,
+    "total": 150,
+    "accuracy": 0.9267
+  },
+  "worst": {
+    "half_life_sessions": 10.0,
+    "keyword_weight": 0.2,
+    "recency_weight": 0.8,
+    "correct": 77,
+    "total": 150,
+    "accuracy": 0.5133
+  }
+}

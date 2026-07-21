@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Adaptive Recall Bench</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;700&family=Inter:wght@400;600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --burgundy: #7E1621;
+    --cream: #F2E8D6;
+    --periwinkle: #AEC3E8;
+    --fail: #C4432B;
+    --ink: #241012;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--cream);
+    color: var(--ink);
+    font-family: 'Inter', system-ui, sans-serif;
+    padding: 2.5rem 3rem 4rem;
+  }
+  h1 {
+    font-family: 'Fraunces', Georgia, serif;
+    font-weight: 700;
+    font-size: 2.1rem;
+    color: var(--burgundy);
+    margin: 0 0 0.15rem;
+    letter-spacing: -0.01em;
+  }
+  .subtitle {
+    font-size: 0.95rem;
+    color: #5b4a4d;
+    margin: 0 0 2rem;
+  }
+  .subtitle code {
+    font-family: 'JetBrains Mono', monospace;
+    background: rgba(126,22,33,0.08);
+    padding: 0.05rem 0.35rem;
+    border-radius: 4px;
+  }
+
+  .scoreboard {
+    display: flex;
+    gap: 3rem;
+    align-items: flex-end;
+    margin-bottom: 2.5rem;
+    flex-wrap: wrap;
+  }
+  .score-card {
+    background: #fff9ef;
+    border: 1px solid rgba(126,22,33,0.15);
+    border-radius: 14px;
+    padding: 1.25rem 1.75rem;
+    min-width: 220px;
+    box-shadow: 0 2px 0 rgba(126,22,33,0.06);
+  }
+  .score-card .label {
+    font-family: 'Fraunces', serif;
+    font-size: 0.95rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #5b4a4d;
+    margin-bottom: 0.35rem;
+  }
+  .score-card.stateless .label::before { content: "✗ "; color: var(--fail); }
+  .score-card.adaptive .label::before { content: "✓ "; color: var(--burgundy); }
+  .score-card .value {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    font-size: 3rem;
+    line-height: 1;
+  }
+  .score-card.stateless .value { color: var(--fail); }
+  .score-card.adaptive .value { color: var(--burgundy); }
+  .score-card .fine-print {
+    font-size: 0.78rem;
+    color: #8a7477;
+    margin-top: 0.4rem;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .versus {
+    font-family: 'Fraunces', serif;
+    font-size: 1.4rem;
+    color: var(--ink);
+    align-self: center;
+    opacity: 0.5;
+  }
+
+  .split {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    background: #ffffffaa;
+    border-radius: 16px;
+    padding: 1.5rem;
+    border: 1px solid rgba(126,22,33,0.1);
+  }
+  .half h2 {
+    font-family: 'Fraunces', serif;
+    font-size: 1.05rem;
+    margin: 0 0 0.15rem;
+  }
+  .half.stateless h2 { color: var(--fail); }
+  .half.adaptive h2 { color: var(--burgundy); }
+  .half .caption {
+    font-size: 0.8rem;
+    color: #8a7477;
+    margin: 0 0 0.9rem;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(25, 1fr);
+    gap: 3px;
+  }
+  .cell {
+    aspect-ratio: 1;
+    border-radius: 3px;
+    background: #e8ddc8;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.55rem;
+    font-family: 'JetBrains Mono', monospace;
+    opacity: 0;
+    transform: scale(0.6);
+    animation: reveal 0.28s ease-out forwards;
+  }
+  .cell.correct.adaptive-cell {
+    background: var(--periwinkle);
+    color: #16233d;
+  }
+  .cell.wrong { background: #f1cabc; color: var(--fail); }
+  .cell.correct.stateless-cell { background: #d7c9a1; color: #5b4a4d; }
+  @keyframes reveal {
+    from { opacity: 0; transform: scale(0.5); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+
+  .score-bars {
+    margin-top: 1.4rem;
+    display: flex;
+    align-items: flex-end;
+    gap: 2px;
+    height: 46px;
+  }
+  .score-bar {
+    flex: 1;
+    background: var(--periwinkle);
+    border-radius: 2px 2px 0 0;
+    height: 0%;
+    transition: height 0.6s ease-out;
+  }
+  .score-bar.miss { background: #f1cabc; }
+
+  footer {
+    margin-top: 2.5rem;
+    font-size: 0.78rem;
+    color: #8a7477;
+    font-family: 'JetBrains Mono', monospace;
+  }
+</style>
+</head>
+<body>
+
+<h1>Adaptive Recall Bench</h1>
+<p class="subtitle">
+  <span id="meta-line">50 simulated multi-session conversations</span> &middot;
+  planted once, queried at <code>+5</code> / <code>+10</code> / <code>+20</code> sessions later &middot;
+  same distractor memory for both agents &middot;
+  <a href="sweep_dashboard.html" style="color: var(--burgundy);">parameter sweep &rarr;</a> &middot;
+  <a href="memory_graph.html" style="color: var(--burgundy);">memory graph &rarr;</a>
+</p>
+
+<div class="scoreboard">
+  <div class="score-card stateless">
+    <div class="label">Stateless agent</div>
+    <div class="value"><span id="count-baseline">0</span>%</div>
+    <div class="fine-print" id="fine-baseline">recall accuracy</div>
+  </div>
+  <div class="versus">vs</div>
+  <div class="score-card adaptive">
+    <div class="label">Adaptive recall agent</div>
+    <div class="value"><span id="count-adaptive">0</span>%</div>
+    <div class="fine-print" id="fine-adaptive">recall accuracy</div>
+  </div>
+</div>
+
+<div class="split">
+  <div class="half stateless">
+    <h2>Stateless &mdash; no memory</h2>
+    <p class="caption">guesses a plausible value with no access to session 1</p>
+    <div class="grid" id="grid-baseline"></div>
+  </div>
+  <div class="half adaptive">
+    <h2>Adaptive recall &mdash; MCP memory server</h2>
+    <p class="caption">recency-decay + keyword-overlap lookup against shared memory</p>
+    <div class="grid" id="grid-adaptive"></div>
+    <div class="score-bars" id="score-bars"></div>
+  </div>
+</div>
+
+<footer id="footer-line">seed &mdash; &middot; queries &mdash;</footer>
+
+<script>
+const DATA = /*__RESULTS_JSON__*/null;
+
+function buildGrids(data) {
+  const gridBaseline = document.getElementById('grid-baseline');
+  const gridAdaptive = document.getElementById('grid-adaptive');
+  const scoreBars = document.getElementById('score-bars');
+
+  let cellIndex = 0;
+  const flat = [];
+  data.conversations.forEach(convo => {
+    convo.queries.forEach(q => flat.push({ convo, q }));
+  });
+
+  flat.forEach(({ convo, q }, i) => {
+    const delayMs = i * 12;
+
+    const bCell = document.createElement('div');
+    bCell.className = 'cell ' + (q.baseline_correct ? 'correct stateless-cell' : 'wrong');
+    bCell.style.animationDelay = delayMs + 'ms';
+    bCell.title = convo.subject + ' / ' + convo.template + ' (+' + q.delta + ')';
+    bCell.textContent = q.baseline_correct ? '✓' : '✗';
+    gridBaseline.appendChild(bCell);
+
+    const aCell = document.createElement('div');
+    aCell.className = 'cell ' + (q.adaptive_correct ? 'correct adaptive-cell' : 'wrong');
+    aCell.style.animationDelay = delayMs + 'ms';
+    aCell.title = convo.subject + ' / ' + convo.template + ' (+' + q.delta + ') score=' + q.adaptive_score;
+    aCell.textContent = q.adaptive_correct ? '✓' : '✗';
+    gridAdaptive.appendChild(aCell);
+
+    const bar = document.createElement('div');
+    bar.className = 'score-bar' + (q.adaptive_correct ? '' : ' miss');
+    scoreBars.appendChild(bar);
+    setTimeout(() => {
+      bar.style.height = Math.round(q.adaptive_score * 100) + '%';
+    }, delayMs + 200);
+
+    cellIndex++;
+  });
+
+  return flat.length;
+}
+
+function countUp(elId, target, durationMs) {
+  const el = document.getElementById(elId);
+  const steps = 30;
+  const stepMs = durationMs / steps;
+  let step = 0;
+  const timer = setInterval(() => {
+    step++;
+    const value = Math.round((target * step) / steps);
+    el.textContent = value;
+    if (step >= steps) {
+      el.textContent = target;
+      clearInterval(timer);
+    }
+  }, stepMs);
+}
+
+function init() {
+  const data = DATA;
+  const totalCells = buildGrids(data);
+
+  document.getElementById('meta-line').textContent =
+    data.num_conversations + ' simulated multi-session conversations';
+  document.getElementById('footer-line').textContent =
+    'seed ' + data.seed + ' · ' + data.total_queries + ' queries · ' +
+    data.baseline_correct + '/' + data.total_queries + ' stateless correct · ' +
+    data.adaptive_correct + '/' + data.total_queries + ' adaptive correct';
+  document.getElementById('fine-baseline').textContent =
+    data.baseline_correct + ' / ' + data.total_queries + ' correct';
+  document.getElementById('fine-adaptive').textContent =
+    data.adaptive_correct + ' / ' + data.total_queries + ' correct';
+
+  const revealMs = totalCells * 12 + 400;
+  setTimeout(() => {
+    countUp('count-baseline', Math.round(data.baseline_accuracy * 100), 900);
+    countUp('count-adaptive', Math.round(data.adaptive_accuracy * 100), 900);
+  }, revealMs);
+}
+
+init();
+</script>
+</body>
+</html>

@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Adaptive Recall Bench &mdash; Memory Graph</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;700&family=Inter:wght@400;600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --burgundy: #7E1621;
+    --cream: #F2E8D6;
+    --periwinkle: #AEC3E8;
+    --fail: #C4432B;
+    --ink: #241012;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--cream);
+    color: var(--ink);
+    font-family: 'Inter', system-ui, sans-serif;
+    padding: 2.5rem 3rem 4rem;
+  }
+  h1 {
+    font-family: 'Fraunces', Georgia, serif;
+    font-weight: 700;
+    font-size: 2.1rem;
+    color: var(--burgundy);
+    margin: 0 0 0.15rem;
+    letter-spacing: -0.01em;
+  }
+  .subtitle {
+    font-size: 0.95rem;
+    color: #5b4a4d;
+    margin: 0 0 2rem;
+  }
+  .subtitle code {
+    font-family: 'JetBrains Mono', monospace;
+    background: rgba(126,22,33,0.08);
+    padding: 0.05rem 0.35rem;
+    border-radius: 4px;
+  }
+  .subtitle a { color: var(--burgundy); }
+
+  .callouts { display: flex; gap: 1.5rem; margin-bottom: 1.75rem; flex-wrap: wrap; }
+  .callout {
+    background: #fff9ef;
+    border: 1px solid rgba(126,22,33,0.15);
+    border-radius: 14px;
+    padding: 1rem 1.5rem;
+    min-width: 170px;
+    box-shadow: 0 2px 0 rgba(126,22,33,0.06);
+  }
+  .callout .label {
+    font-family: 'Fraunces', serif;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #5b4a4d;
+    margin-bottom: 0.3rem;
+  }
+  .callout .value {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    font-size: 1.6rem;
+    color: var(--burgundy);
+  }
+
+  .panel {
+    background: #ffffffaa;
+    border-radius: 16px;
+    padding: 1.75rem 2rem 1.5rem;
+    border: 1px solid rgba(126,22,33,0.1);
+    margin-bottom: 1.5rem;
+    position: relative;
+  }
+  .panel h2 {
+    font-family: 'Fraunces', serif;
+    font-size: 1.05rem;
+    margin: 0 0 0.2rem;
+    color: var(--burgundy);
+  }
+  .panel .caption {
+    font-size: 0.8rem;
+    color: #8a7477;
+    margin: 0 0 1rem;
+  }
+
+  #graph-wrap { border-radius: 12px; background: #fffdf8; border: 1px solid rgba(126,22,33,0.08); overflow: hidden; }
+  svg { display: block; }
+  .legend {
+    display: flex;
+    gap: 1.75rem;
+    margin-top: 0.9rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    color: #5b4a4d;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .legend .swatch { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 6px; vertical-align: -1px; }
+  .legend .line { display: inline-block; width: 18px; height: 2.5px; margin-right: 6px; vertical-align: 2px; }
+  #settle-badge {
+    position: absolute;
+    top: 1.5rem;
+    right: 1.75rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: #8a7477;
+    opacity: 0;
+    transition: opacity 0.4s ease-out;
+  }
+  #settle-badge.show { opacity: 1; }
+
+  footer {
+    margin-top: 1rem;
+    font-size: 0.78rem;
+    color: #8a7477;
+    font-family: 'JetBrains Mono', monospace;
+  }
+</style>
+</head>
+<body>
+
+<h1>Memory Graph</h1>
+<p class="subtitle">
+  same <span id="meta-line">50 facts / 150 queries</span> as the wow-shot benchmark, re-shaped as a graph &middot;
+  each burgundy hub is a planted fact, each small dot is a recall attempt at +5/+10/+20 sessions later &middot;
+  <a href="dashboard.html">&larr; split-screen view</a> &middot;
+  <a href="sweep_dashboard.html">parameter sweep &rarr;</a>
+</p>
+
+<div class="callouts">
+  <div class="callout">
+    <div class="label">Adaptive accuracy</div>
+    <div class="value" id="acc-value">&mdash;</div>
+  </div>
+  <div class="callout">
+    <div class="label">Correct / total edges</div>
+    <div class="value" id="edges-value">&mdash;</div>
+  </div>
+  <div class="callout" id="delta-callout">
+    <div class="label">By recall distance</div>
+    <div class="value" id="delta-value" style="font-size:1.05rem;">&mdash;</div>
+  </div>
+</div>
+
+<div class="panel">
+  <h2>Fact &rarr; query recall graph</h2>
+  <p class="caption">force-directed layout, pure SVG/JS &middot; periwinkle edge = adaptive recall got it right &middot; red edge = adaptive recall missed &middot; layout settles on its own, no clicking required</p>
+  <div id="graph-wrap">
+    <svg id="graph" width="900" height="600" viewBox="0 0 900 600"></svg>
+  </div>
+  <div id="settle-badge">layout settled</div>
+  <div class="legend">
+    <span><span class="swatch" style="background:var(--burgundy);"></span>fact (planted, session 1&ndash;5)</span>
+    <span><span class="swatch" style="background:var(--periwinkle);"></span>query &middot; recalled correctly</span>
+    <span><span class="swatch" style="background:var(--fail);"></span>query &middot; recall missed</span>
+    <span><span class="line" style="background:var(--periwinkle);"></span>correct edge</span>
+    <span><span class="line" style="background:var(--fail);"></span>missed edge</span>
+  </div>
+</div>
+
+<footer id="footer-line">seed &mdash;</footer>
+
+<script>
+const DATA = {"seed": 42, "num_conversations": 50, "total_queries": 150, "adaptive_correct": 139, "adaptive_accuracy": 0.9267, "baseline_accuracy": 0.08, "by_delta": [{"delta": 5, "correct": 47, "total": 50}, {"delta": 10, "correct": 47, "total": 50}, {"delta": 20, "correct": 45, "total": 50}], "nodes": [{"id": "f0", "type": "fact", "label": "Priya \u00b7 launch_date", "template": "launch_date"}, {"id": "q0_5", "type": "query", "label": "+5", "delta": 5, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.94}, {"id": "q0_10", "type": "query", "label": "+10", "delta": 10, "adaptive_correct": true, "baseline_correct": true, "adaptive_score": 0.8571}, {"id": "q0_20", "type": "query", "label": "+20", "delta": 20, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.7571}, {"id": "f1", "type": "fact", "label": "Marcus \u00b7 meeting_day", "template": "meeting_day"}, {"id": "q1_5", "type": "query", "label": "+5", "delta": 5, "adaptive_correct": false, "baseline_correct": false, "adaptive_score": 0.5751}, {"id": "q1_10", "type": "query", "label": "+10", "delta": 10, "adaptive_correct": false, "baseline_correct": false, "adaptive_score": 0.4922}, {"id": "q1_20", "type": "query", "label": "+20", "delta": 20, "adaptive_correct": false, "baseline_correct": false, "adaptive_score": 0.3922}, {"id": "f2", "type": "fact", "label": "Elena \u00b7 budget", "template": "budget"}, {"id": "q2_5", "type": "query", "label": "+5", "delta": 5, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.8056}, {"id": "q2_10", "type": "query", "label": "+10", "delta": 10, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.7227}, {"id": "q2_20", "type": "query", "label": "+20", "delta": 20, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.6227}, {"id": "f3", "type": "fact", "label": "Devon \u00b7 office_location", "template": "office_location"}, {"id": "q3_5", "type": "query", "label": "+5", "delta": 5, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.4028}, {"id": "q3_10", "type": "query", "label": "+10", "delta": 10, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.32}, {"id": "q3_20", "type": "query", "label": "+20", "delta": 20, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.22}, {"id": "f4", "type": "fact", "label": "Yuki \u00b7 codename", "template": "codename"}, {"id": "q4_5", "type": "query", "label": "+5", "delta": 5, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.9078}, {"id": "q4_10", "type": "query", "label": "+10", "delta": 10, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.825}, {"id": "q4_20", "type": "query", "label": "+20", "delta": 20, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.725}, {"id": "f5", "type": "fact", "label": "Fatima \u00b7 vacation", "template": "vacation"}, {"id": "q5_5", "type": "query", "label": "+5", "delta": 5, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.4919}, {"id": "q5_10", "type": "query", "label": "+10", "delta": 10, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.4091}, {"id": "q5_20", "type": "query", "label": "+20", "delta": 20, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.3091}, {"id": "f6", "type": "fact", "label": "Carlos \u00b7 team_lead", "template": "team_lead"}, {"id": "q6_5", "type": "query", "label": "+5", "delta": 5, "adaptive_correct": true, "baseline_correct": true, "adaptive_score": 0.9078}, {"id": "q6_10", "type": "query", "label": "+10", "delta": 10, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.825}, {"id": "q6_20", "type": "query", "label": "+20", "delta": 20, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.725}, {"id": "f7", "type": "fact", "label": "Ingrid \u00b7 wifi_hint", "template": "wifi_hint"}, {"id": "q7_5", "type": "query", "label": "+5", "delta": 5, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.8351}, {"id": "q7_10", "type": "query", "label": "+10", "delta": 10, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.7523}, {"id": "q7_20", "type": "query", "label": "+20", "delta": 20, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.6523}, {"id": "f8", "type": "fact", "label": "Kwame \u00b7 lunch_order", "template": "lunch_order"}, {"id": "q8_5", "type": "query", "label": "+5", "delta": 5, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.9}, {"id": "q8_10", "type": "query", "label": "+10", "delta": 10, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.8171}, {"id": "q8_20", "type": "query", "label": "+20", "delta": 20, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.7171}, {"id": "f9", "type": "fact", "label": "Sanjay \u00b7 flight", "template": "flight"}, {"id": "q9_5", "type": "query", "label": "+5", "delta": 5, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.9859}, {"id": "q9_10", "type": "query", "label": "+10", "delta": 10, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.903}, {"id": "q9_20", "type": "query", "label": "+20", "delta": 20, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.803}, {"id": "f10", "type": "fact", "label": "Nadia \u00b7 launch_date", "template": "launch_date"}, {"id": "q10_5", "type": "query", "label": "+5", "delta": 5, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.94}, {"id": "q10_10", "type": "query", "label": "+10", "delta": 10, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.8571}, {"id": "q10_20", "type": "query", "label": "+20", "delta": 20, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.7571}, {"id": "f11", "type": "fact", "label": "Omar \u00b7 meeting_day", "template": "meeting_day"}, {"id": "q11_5", "type": "query", "label": "+5", "delta": 5, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.5499}, {"id": "q11_10", "type": "query", "label": "+10", "delta": 10, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.467}, {"id": "q11_20", "type": "query", "label": "+20", "delta": 20, "adaptive_correct": false, "baseline_correct": false, "adaptive_score": 0.3793}, {"id": "f12", "type": "fact", "label": "Bianca \u00b7 budget", "template": "budget"}, {"id": "q12_5", "type": "query", "label": "+5", "delta": 5, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.8056}, {"id": "q12_10", "type": "query", "label": "+10", "delta": 10, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.7227}, {"id": "q12_20", "type": "query", "label": "+20", "delta": 20, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.6227}, {"id": "f13", "type": "fact", "label": "Theo \u00b7 office_location", "template": "office_location"}, {"id": "q13_5", "type": "query", "label": "+5", "delta": 5, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.4028}, {"id": "q13_10", "type": "query", "label": "+10", "delta": 10, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.32}, {"id": "q13_20", "type": "query", "label": "+20", "delta": 20, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.22}, {"id": "f14", "type": "fact", "label": "Aisha \u00b7 codename", "template": "codename"}, {"id": "q14_5", "type": "query", "label": "+5", "delta": 5, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.9078}, {"id": "q14_10", "type": "query", "label": "+10", "delta": 10, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.825}, {"id": "q14_20", "type": "query", "label": "+20", "delta": 20, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.725}, {"id": "f15", "type": "fact", "label": "Lars \u00b7 vacation", "template": "vacation"}, {"id": "q15_5", "type": "query", "label": "+5", "delta": 5, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.4919}, {"id": "q15_10", "type": "query", "label": "+10", "delta": 10, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.4091}, {"id": "q15_20", "type": "query", "label": "+20", "delta": 20, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.3091}, {"id": "f16", "type": "fact", "label": "Mei \u00b7 team_lead", "template": "team_lead"}, {"id": "q16_5", "type": "query", "label": "+5", "delta": 5, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.9078}, {"id": "q16_10", "type": "query", "label": "+10", "delta": 10, "adaptive_correct": true, "baseline_correct": true, "adaptive_score": 0.825}, {"id": "q16_20", "type": "query", "label": "+20", "delta": 20, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.725}, {"id": "f17", "type": "fact", "label": "Rafael \u00b7 wifi_hint", "template": "wifi_hint"}, {"id": "q17_5", "type": "query", "label": "+5", "delta": 5, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.8351}, {"id": "q17_10", "type": "query", "label": "+10", "delta": 10, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.7523}, {"id": "q17_20", "type": "query", "label": "+20", "delta": 20, "adaptive_correct": true, "baseline_correct": true, "adaptive_score": 0.6523}, {"id": "f18", "type": "fact", "label": "Greta \u00b7 lunch_order", "template": "lunch_order"}, {"id": "q18_5", "type": "query", "label": "+5", "delta": 5, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.99}, {"id": "q18_10", "type": "query", "label": "+10", "delta": 10, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.9071}, {"id": "q18_20", "type": "query", "label": "+20", "delta": 20, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.8071}, {"id": "f19", "type": "fact", "label": "Jonas \u00b7 flight", "template": "flight"}, {"id": "q19_5", "type": "query", "label": "+5", "delta": 5, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.9859}, {"id": "q19_10", "type": "query", "label": "+10", "delta": 10, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.903}, {"id": "q19_20", "type": "query", "label": "+20", "delta": 20, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.803}, {"id": "f20", "type": "fact", "label": "Amara \u00b7 launch_date", "template": "launch_date"}, {"id": "q20_5", "type": "query", "label": "+5", "delta": 5, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.94}, {"id": "q20_10", "type": "query", "label": "+10", "delta": 10, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.8571}, {"id": "q20_20", "type": "query", "label": "+20", "delta": 20, "adaptive_correct": true, "baseline_correct": true, "adaptive_score": 0.7571}, {"id": "f21", "type": "fact", "label": "Viktor \u00b7 meeting_day", "template": "meeting_day"}, {"id": "q21_5", "type": "query", "label": "+5", "delta": 5, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.5499}, {"id": "q21_10", "type": "query", "label": "+10", "delta": 10, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.467}, {"id": "q21_20", "type": "query", "label": "+20", "delta": 20, "adaptive_correct": false, "baseline_correct": false, "adaptive_score": 0.3793}, {"id": "f22", "type": "fact", "label": "Lucia \u00b7 budget", "template": "budget"}, {"id": "q22_5", "type": "query", "label": "+5", "delta": 5, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.8056}, {"id": "q22_10", "type": "query", "label": "+10", "delta": 10, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.7227}, {"id": "q22_20", "type": "query", "label": "+20", "delta": 20, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.6227}, {"id": "f23", "type": "fact", "label": "Hassan \u00b7 office_location", "template": "office_location"}, {"id": "q23_5", "type": "query", "label": "+5", "delta": 5, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.3974}, {"id": "q23_10", "type": "query", "label": "+10", "delta": 10, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.3145}, {"id": "q23_20", "type": "query", "label": "+20", "delta": 20, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.2145}, {"id": "f24", "type": "fact", "label": "Sofia \u00b7 codename", "template": "codename"}, {"id": "q24_5", "type": "query", "label": "+5", "delta": 5, "adaptive_correct": true, "baseline_correct": true, "adaptive_score": 0.9078}, {"id": "q24_10", "type": "query", "label": "+10", "delta": 10, "adaptive_correct": true, "baseline_correct": true, "adaptive_score": 0.825}, {"id": "q24_20", "type": "query", "label": "+20", "delta": 20, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.725}, {"id": "f25", "type": "fact", "label": "Dmitri \u00b7 vacation", "template": "vacation"}, {"id": "q25_5", "type": "query", "label": "+5", "delta": 5, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.4919}, {"id": "q25_10", "type": "query", "label": "+10", "delta": 10, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.4091}, {"id": "q25_20", "type": "query", "label": "+20", "delta": 20, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.3091}, {"id": "f26", "type": "fact", "label": "Wren \u00b7 team_lead", "template": "team_lead"}, {"id": "q26_5", "type": "query", "label": "+5", "delta": 5, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.9078}, {"id": "q26_10", "type": "query", "label": "+10", "delta": 10, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.825}, {"id": "q26_20", "type": "query", "label": "+20", "delta": 20, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.725}, {"id": "f27", "type": "fact", "label": "Tobias \u00b7 wifi_hint", "template": "wifi_hint"}, {"id": "q27_5", "type": "query", "label": "+5", "delta": 5, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.8351}, {"id": "q27_10", "type": "query", "label": "+10", "delta": 10, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.7523}, {"id": "q27_20", "type": "query", "label": "+20", "delta": 20, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.6523}, {"id": "f28", "type": "fact", "label": "Layla \u00b7 lunch_order", "template": "lunch_order"}, {"id": "q28_5", "type": "query", "label": "+5", "delta": 5, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.99}, {"id": "q28_10", "type": "query", "label": "+10", "delta": 10, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.9071}, {"id": "q28_20", "type": "query", "label": "+20", "delta": 20, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.8071}, {"id": "f29", "type": "fact", "label": "Ezra \u00b7 flight", "template": "flight"}, {"id": "q29_5", "type": "query", "label": "+5", "delta": 5, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.9859}, {"id": "q29_10", "type": "query", "label": "+10", "delta": 10, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.903}, {"id": "q29_20", "type": "query", "label": "+20", "delta": 20, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.803}, {"id": "f30", "type": "fact", "label": "Noor \u00b7 launch_date", "template": "launch_date"}, {"id": "q30_5", "type": "query", "label": "+5", "delta": 5, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.94}, {"id": "q30_10", "type": "query", "label": "+10", "delta": 10, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.8571}, {"id": "q30_20", "type": "query", "label": "+20", "delta": 20, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.7571}, {"id": "f31", "type": "fact", "label": "Callum \u00b7 meeting_day", "template": "meeting_day"}, {"id": "q31_5", "type": "query", "label": "+5", "delta": 5, "adaptive_correct": false, "baseline_correct": false, "adaptive_score": 0.6171}, {"id": "q31_10", "type": "query", "label": "+10", "delta": 10, "adaptive_correct": false, "baseline_correct": false, "adaptive_score": 0.5219}, {"id": "q31_20", "type": "query", "label": "+20", "delta": 20, "adaptive_correct": false, "baseline_correct": false, "adaptive_score": 0.4071}, {"id": "f32", "type": "fact", "label": "Mireille \u00b7 budget", "template": "budget"}, {"id": "q32_5", "type": "query", "label": "+5", "delta": 5, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.8056}, {"id": "q32_10", "type": "query", "label": "+10", "delta": 10, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.7227}, {"id": "q32_20", "type": "query", "label": "+20", "delta": 20, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.6227}, {"id": "f33", "type": "fact", "label": "Anders \u00b7 office_location", "template": "office_location"}, {"id": "q33_5", "type": "query", "label": "+5", "delta": 5, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.3974}, {"id": "q33_10", "type": "query", "label": "+10", "delta": 10, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.3145}, {"id": "q33_20", "type": "query", "label": "+20", "delta": 20, "adaptive_correct": true, "baseline_correct": true, "adaptive_score": 0.2145}, {"id": "f34", "type": "fact", "label": "Zola \u00b7 codename", "template": "codename"}, {"id": "q34_5", "type": "query", "label": "+5", "delta": 5, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.9614}, {"id": "q34_10", "type": "query", "label": "+10", "delta": 10, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.8786}, {"id": "q34_20", "type": "query", "label": "+20", "delta": 20, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.7786}, {"id": "f35", "type": "fact", "label": "Emeka \u00b7 vacation", "template": "vacation"}, {"id": "q35_5", "type": "query", "label": "+5", "delta": 5, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.4919}, {"id": "q35_10", "type": "query", "label": "+10", "delta": 10, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.4091}, {"id": "q35_20", "type": "query", "label": "+20", "delta": 20, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.3091}, {"id": "f36", "type": "fact", "label": "Ingrid \u00b7 team_lead", "template": "team_lead"}, {"id": "q36_5", "type": "query", "label": "+5", "delta": 5, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.9078}, {"id": "q36_10", "type": "query", "label": "+10", "delta": 10, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.825}, {"id": "q36_20", "type": "query", "label": "+20", "delta": 20, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.725}, {"id": "f37", "type": "fact", "label": "Petra \u00b7 wifi_hint", "template": "wifi_hint"}, {"id": "q37_5", "type": "query", "label": "+5", "delta": 5, "adaptive_correct": true, "baseline_correct": true, "adaptive_score": 0.8351}, {"id": "q37_10", "type": "query", "label": "+10", "delta": 10, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.7523}, {"id": "q37_20", "type": "query", "label": "+20", "delta": 20, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.6523}, {"id": "f38", "type": "fact", "label": "Kai \u00b7 lunch_order", "template": "lunch_order"}, {"id": "q38_5", "type": "query", "label": "+5", "delta": 5, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.94}, {"id": "q38_10", "type": "query", "label": "+10", "delta": 10, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.8571}, {"id": "q38_20", "type": "query", "label": "+20", "delta": 20, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.7571}, {"id": "f39", "type": "fact", "label": "Rosa \u00b7 flight", "template": "flight"}, {"id": "q39_5", "type": "query", "label": "+5", "delta": 5, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.9859}, {"id": "q39_10", "type": "query", "label": "+10", "delta": 10, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.903}, {"id": "q39_20", "type": "query", "label": "+20", "delta": 20, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.803}, {"id": "f40", "type": "fact", "label": "Malik \u00b7 launch_date", "template": "launch_date"}, {"id": "q40_5", "type": "query", "label": "+5", "delta": 5, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.94}, {"id": "q40_10", "type": "query", "label": "+10", "delta": 10, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.8571}, {"id": "q40_20", "type": "query", "label": "+20", "delta": 20, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.7571}, {"id": "f41", "type": "fact", "label": "Tessa \u00b7 meeting_day", "template": "meeting_day"}, {"id": "q41_5", "type": "query", "label": "+5", "delta": 5, "adaptive_correct": false, "baseline_correct": false, "adaptive_score": 0.5561}, {"id": "q41_10", "type": "query", "label": "+10", "delta": 10, "adaptive_correct": false, "baseline_correct": false, "adaptive_score": 0.4788}, {"id": "q41_20", "type": "query", "label": "+20", "delta": 20, "adaptive_correct": false, "baseline_correct": false, "adaptive_score": 0.3855}, {"id": "f42", "type": "fact", "label": "Ravi \u00b7 budget", "template": "budget"}, {"id": "q42_5", "type": "query", "label": "+5", "delta": 5, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.8056}, {"id": "q42_10", "type": "query", "label": "+10", "delta": 10, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.7227}, {"id": "q42_20", "type": "query", "label": "+20", "delta": 20, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.6227}, {"id": "f43", "type": "fact", "label": "Ines \u00b7 office_location", "template": "office_location"}, {"id": "q43_5", "type": "query", "label": "+5", "delta": 5, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.3974}, {"id": "q43_10", "type": "query", "label": "+10", "delta": 10, "adaptive_correct": true, "baseline_correct": true, "adaptive_score": 0.3145}, {"id": "q43_20", "type": "query", "label": "+20", "delta": 20, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.2145}, {"id": "f44", "type": "fact", "label": "Boaz \u00b7 codename", "template": "codename"}, {"id": "q44_5", "type": "query", "label": "+5", "delta": 5, "adaptive_correct": true, "baseline_correct": true, "adaptive_score": 0.9614}, {"id": "q44_10", "type": "query", "label": "+10", "delta": 10, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.8786}, {"id": "q44_20", "type": "query", "label": "+20", "delta": 20, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.7786}, {"id": "f45", "type": "fact", "label": "Selin \u00b7 vacation", "template": "vacation"}, {"id": "q45_5", "type": "query", "label": "+5", "delta": 5, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.4919}, {"id": "q45_10", "type": "query", "label": "+10", "delta": 10, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.4091}, {"id": "q45_20", "type": "query", "label": "+20", "delta": 20, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.3091}, {"id": "f46", "type": "fact", "label": "Otis \u00b7 team_lead", "template": "team_lead"}, {"id": "q46_5", "type": "query", "label": "+5", "delta": 5, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.9078}, {"id": "q46_10", "type": "query", "label": "+10", "delta": 10, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.825}, {"id": "q46_20", "type": "query", "label": "+20", "delta": 20, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.725}, {"id": "f47", "type": "fact", "label": "Freya \u00b7 wifi_hint", "template": "wifi_hint"}, {"id": "q47_5", "type": "query", "label": "+5", "delta": 5, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.8351}, {"id": "q47_10", "type": "query", "label": "+10", "delta": 10, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.7523}, {"id": "q47_20", "type": "query", "label": "+20", "delta": 20, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.6523}, {"id": "f48", "type": "fact", "label": "Idris \u00b7 lunch_order", "template": "lunch_order"}, {"id": "q48_5", "type": "query", "label": "+5", "delta": 5, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.94}, {"id": "q48_10", "type": "query", "label": "+10", "delta": 10, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.8571}, {"id": "q48_20", "type": "query", "label": "+20", "delta": 20, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.7571}, {"id": "f49", "type": "fact", "label": "Camille \u00b7 flight", "template": "flight"}, {"id": "q49_5", "type": "query", "label": "+5", "delta": 5, "adaptive_correct": true, "baseline_correct": true, "adaptive_score": 0.9859}, {"id": "q49_10", "type": "query", "label": "+10", "delta": 10, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.903}, {"id": "q49_20", "type": "query", "label": "+20", "delta": 20, "adaptive_correct": true, "baseline_correct": false, "adaptive_score": 0.803}], "edges": [{"source": "f0", "target": "q0_5", "correct": true}, {"source": "f0", "target": "q0_10", "correct": true}, {"source": "f0", "target": "q0_20", "correct": true}, {"source": "f1", "target": "q1_5", "correct": false}, {"source": "f1", "target": "q1_10", "correct": false}, {"source": "f1", "target": "q1_20", "correct": false}, {"source": "f2", "target": "q2_5", "correct": true}, {"source": "f2", "target": "q2_10", "correct": true}, {"source": "f2", "target": "q2_20", "correct": true}, {"source": "f3", "target": "q3_5", "correct": true}, {"source": "f3", "target": "q3_10", "correct": true}, {"source": "f3", "target": "q3_20", "correct": true}, {"source": "f4", "target": "q4_5", "correct": true}, {"source": "f4", "target": "q4_10", "correct": true}, {"source": "f4", "target": "q4_20", "correct": true}, {"source": "f5", "target": "q5_5", "correct": true}, {"source": "f5", "target": "q5_10", "correct": true}, {"source": "f5", "target": "q5_20", "correct": true}, {"source": "f6", "target": "q6_5", "correct": true}, {"source": "f6", "target": "q6_10", "correct": true}, {"source": "f6", "target": "q6_20", "correct": true}, {"source": "f7", "target": "q7_5", "correct": true}, {"source": "f7", "target": "q7_10", "correct": true}, {"source": "f7", "target": "q7_20", "correct": true}, {"source": "f8", "target": "q8_5", "correct": true}, {"source": "f8", "target": "q8_10", "correct": true}, {"source": "f8", "target": "q8_20", "correct": true}, {"source": "f9", "target": "q9_5", "correct": true}, {"source": "f9", "target": "q9_10", "correct": true}, {"source": "f9", "target": "q9_20", "correct": true}, {"source": "f10", "target": "q10_5", "correct": true}, {"source": "f10", "target": "q10_10", "correct": true}, {"source": "f10", "target": "q10_20", "correct": true}, {"source": "f11", "target": "q11_5", "correct": true}, {"source": "f11", "target": "q11_10", "correct": true}, {"source": "f11", "target": "q11_20", "correct": false}, {"source": "f12", "target": "q12_5", "correct": true}, {"source": "f12", "target": "q12_10", "correct": true}, {"source": "f12", "target": "q12_20", "correct": true}, {"source": "f13", "target": "q13_5", "correct": true}, {"source": "f13", "target": "q13_10", "correct": true}, {"source": "f13", "target": "q13_20", "correct": true}, {"source": "f14", "target": "q14_5", "correct": true}, {"source": "f14", "target": "q14_10", "correct": true}, {"source": "f14", "target": "q14_20", "correct": true}, {"source": "f15", "target": "q15_5", "correct": true}, {"source": "f15", "target": "q15_10", "correct": true}, {"source": "f15", "target": "q15_20", "correct": true}, {"source": "f16", "target": "q16_5", "correct": true}, {"source": "f16", "target": "q16_10", "correct": true}, {"source": "f16", "target": "q16_20", "correct": true}, {"source": "f17", "target": "q17_5", "correct": true}, {"source": "f17", "target": "q17_10", "correct": true}, {"source": "f17", "target": "q17_20", "correct": true}, {"source": "f18", "target": "q18_5", "correct": true}, {"source": "f18", "target": "q18_10", "correct": true}, {"source": "f18", "target": "q18_20", "correct": true}, {"source": "f19", "target": "q19_5", "correct": true}, {"source": "f19", "target": "q19_10", "correct": true}, {"source": "f19", "target": "q19_20", "correct": true}, {"source": "f20", "target": "q20_5", "correct": true}, {"source": "f20", "target": "q20_10", "correct": true}, {"source": "f20", "target": "q20_20", "correct": true}, {"source": "f21", "target": "q21_5", "correct": true}, {"source": "f21", "target": "q21_10", "correct": true}, {"source": "f21", "target": "q21_20", "correct": false}, {"source": "f22", "target": "q22_5", "correct": true}, {"source": "f22", "target": "q22_10", "correct": true}, {"source": "f22", "target": "q22_20", "correct": true}, {"source": "f23", "target": "q23_5", "correct": true}, {"source": "f23", "target": "q23_10", "correct": true}, {"source": "f23", "target": "q23_20", "correct": true}, {"source": "f24", "target": "q24_5", "correct": true}, {"source": "f24", "target": "q24_10", "correct": true}, {"source": "f24", "target": "q24_20", "correct": true}, {"source": "f25", "target": "q25_5", "correct": true}, {"source": "f25", "target": "q25_10", "correct": true}, {"source": "f25", "target": "q25_20", "correct": true}, {"source": "f26", "target": "q26_5", "correct": true}, {"source": "f26", "target": "q26_10", "correct": true}, {"source": "f26", "target": "q26_20", "correct": true}, {"source": "f27", "target": "q27_5", "correct": true}, {"source": "f27", "target": "q27_10", "correct": true}, {"source": "f27", "target": "q27_20", "correct": true}, {"source": "f28", "target": "q28_5", "correct": true}, {"source": "f28", "target": "q28_10", "correct": true}, {"source": "f28", "target": "q28_20", "correct": true}, {"source": "f29", "target": "q29_5", "correct": true}, {"source": "f29", "target": "q29_10", "correct": true}, {"source": "f29", "target": "q29_20", "correct": true}, {"source": "f30", "target": "q30_5", "correct": true}, {"source": "f30", "target": "q30_10", "correct": true}, {"source": "f30", "target": "q30_20", "correct": true}, {"source": "f31", "target": "q31_5", "correct": false}, {"source": "f31", "target": "q31_10", "correct": false}, {"source": "f31", "target": "q31_20", "correct": false}, {"source": "f32", "target": "q32_5", "correct": true}, {"source": "f32", "target": "q32_10", "correct": true}, {"source": "f32", "target": "q32_20", "correct": true}, {"source": "f33", "target": "q33_5", "correct": true}, {"source": "f33", "target": "q33_10", "correct": true}, {"source": "f33", "target": "q33_20", "correct": true}, {"source": "f34", "target": "q34_5", "correct": true}, {"source": "f34", "target": "q34_10", "correct": true}, {"source": "f34", "target": "q34_20", "correct": true}, {"source": "f35", "target": "q35_5", "correct": true}, {"source": "f35", "target": "q35_10", "correct": true}, {"source": "f35", "target": "q35_20", "correct": true}, {"source": "f36", "target": "q36_5", "correct": true}, {"source": "f36", "target": "q36_10", "correct": true}, {"source": "f36", "target": "q36_20", "correct": true}, {"source": "f37", "target": "q37_5", "correct": true}, {"source": "f37", "target": "q37_10", "correct": true}, {"source": "f37", "target": "q37_20", "correct": true}, {"source": "f38", "target": "q38_5", "correct": true}, {"source": "f38", "target": "q38_10", "correct": true}, {"source": "f38", "target": "q38_20", "correct": true}, {"source": "f39", "target": "q39_5", "correct": true}, {"source": "f39", "target": "q39_10", "correct": true}, {"source": "f39", "target": "q39_20", "correct": true}, {"source": "f40", "target": "q40_5", "correct": true}, {"source": "f40", "target": "q40_10", "correct": true}, {"source": "f40", "target": "q40_20", "correct": true}, {"source": "f41", "target": "q41_5", "correct": false}, {"source": "f41", "target": "q41_10", "correct": false}, {"source": "f41", "target": "q41_20", "correct": false}, {"source": "f42", "target": "q42_5", "correct": true}, {"source": "f42", "target": "q42_10", "correct": true}, {"source": "f42", "target": "q42_20", "correct": true}, {"source": "f43", "target": "q43_5", "correct": true}, {"source": "f43", "target": "q43_10", "correct": true}, {"source": "f43", "target": "q43_20", "correct": true}, {"source": "f44", "target": "q44_5", "correct": true}, {"source": "f44", "target": "q44_10", "correct": true}, {"source": "f44", "target": "q44_20", "correct": true}, {"source": "f45", "target": "q45_5", "correct": true}, {"source": "f45", "target": "q45_10", "correct": true}, {"source": "f45", "target": "q45_20", "correct": true}, {"source": "f46", "target": "q46_5", "correct": true}, {"source": "f46", "target": "q46_10", "correct": true}, {"source": "f46", "target": "q46_20", "correct": true}, {"source": "f47", "target": "q47_5", "correct": true}, {"source": "f47", "target": "q47_10", "correct": true}, {"source": "f47", "target": "q47_20", "correct": true}, {"source": "f48", "target": "q48_5", "correct": true}, {"source": "f48", "target": "q48_10", "correct": true}, {"source": "f48", "target": "q48_20", "correct": true}, {"source": "f49", "target": "q49_5", "correct": true}, {"source": "f49", "target": "q49_10", "correct": true}, {"source": "f49", "target": "q49_20", "correct": true}]};
+const W = 900, H = 600;
+const CENTER = { x: W / 2, y: H / 2 };
+
+function seededRandom(seed) {
+  let s = seed % 2147483647;
+  if (s <= 0) s += 2147483646;
+  return function () {
+    s = (s * 16807) % 2147483647;
+    return (s - 1) / 2147483646;
+  };
+}
+
+function buildSimNodes() {
+  const rand = seededRandom((DATA.seed || 42) + 1);
+  const factNodes = DATA.nodes.filter(n => n.type === 'fact');
+  const nodeById = {};
+  const nodes = DATA.nodes.map((n, i) => {
+    let x, y;
+    if (n.type === 'fact') {
+      const fi = factNodes.indexOf(n);
+      const angle = (fi / factNodes.length) * Math.PI * 2;
+      const r = 210;
+      x = CENTER.x + Math.cos(angle) * r;
+      y = CENTER.y + Math.sin(angle) * r;
+    } else {
+      x = CENTER.x + (rand() - 0.5) * W * 0.8;
+      y = CENTER.y + (rand() - 0.5) * H * 0.8;
+    }
+    const sim = { ...n, x, y, vx: 0, vy: 0 };
+    nodeById[n.id] = sim;
+    return sim;
+  });
+  return { nodes, nodeById };
+}
+
+function runSimulation(nodes, nodeById, edges) {
+  const edgeList = edges.map(e => ({ ...e, s: nodeById[e.source], t: nodeById[e.target] }));
+  const REPULSION = 1500;
+  const SPRING_K = 0.06;
+  const REST_LEN = 46;
+  const CENTER_K = 0.02;
+  const DAMPING = 0.82;
+  const MAX_FRAMES = 420;
+  const MARGIN = 40;
+
+  let frame = 0;
+
+  function step() {
+    for (const n of nodes) { n.fx = 0; n.fy = 0; }
+
+    for (let i = 0; i < nodes.length; i++) {
+      const a = nodes[i];
+      for (let j = i + 1; j < nodes.length; j++) {
+        const b = nodes[j];
+        let dx = a.x - b.x, dy = a.y - b.y;
+        let d2 = dx * dx + dy * dy;
+        if (d2 < 1) d2 = 1;
+        const d = Math.sqrt(d2);
+        const force = REPULSION / d2;
+        const fx = (dx / d) * force, fy = (dy / d) * force;
+        a.fx += fx; a.fy += fy;
+        b.fx -= fx; b.fy -= fy;
+      }
+      a.fx += (CENTER.x - a.x) * CENTER_K;
+      a.fy += (CENTER.y - a.y) * CENTER_K;
+    }
+
+    for (const e of edgeList) {
+      const dx = e.t.x - e.s.x, dy = e.t.y - e.s.y;
+      const d = Math.max(Math.sqrt(dx * dx + dy * dy), 1);
+      const stretch = d - REST_LEN;
+      const fx = (dx / d) * stretch * SPRING_K;
+      const fy = (dy / d) * stretch * SPRING_K;
+      e.s.fx += fx; e.s.fy += fy;
+      e.t.fx -= fx; e.t.fy -= fy;
+    }
+
+    let maxSpeed = 0;
+    for (const n of nodes) {
+      // soft boundary push-back instead of a hard clamp, so nodes ease off
+      // the walls instead of pile up in a line along the edge
+      if (n.x < MARGIN) n.fx += (MARGIN - n.x) * 0.05;
+      if (n.x > W - MARGIN) n.fx -= (n.x - (W - MARGIN)) * 0.05;
+      if (n.y < MARGIN) n.fy += (MARGIN - n.y) * 0.05;
+      if (n.y > H - MARGIN) n.fy -= (n.y - (H - MARGIN)) * 0.05;
+
+      n.vx = (n.vx + n.fx) * DAMPING;
+      n.vy = (n.vy + n.fy) * DAMPING;
+      n.x += n.vx;
+      n.y += n.vy;
+      n.x = Math.min(W - 8, Math.max(8, n.x));
+      n.y = Math.min(H - 8, Math.max(8, n.y));
+      maxSpeed = Math.max(maxSpeed, Math.abs(n.vx) + Math.abs(n.vy));
+    }
+
+    render(nodes, edgeList);
+    frame++;
+    if (frame < MAX_FRAMES && (frame < 40 || maxSpeed > 0.06)) {
+      requestAnimationFrame(step);
+    } else {
+      document.getElementById('settle-badge').classList.add('show');
+    }
+  }
+
+  requestAnimationFrame(step);
+}
+
+function render(nodes, edgeList) {
+  const svg = document.getElementById('graph');
+  let content = '';
+  for (const e of edgeList) {
+    const color = e.correct ? 'var(--periwinkle)' : 'var(--fail)';
+    content += `<line x1="${e.s.x.toFixed(1)}" y1="${e.s.y.toFixed(1)}" x2="${e.t.x.toFixed(1)}" y2="${e.t.y.toFixed(1)}" stroke="${color}" stroke-width="1.6" stroke-opacity="0.65"/>`;
+  }
+  for (const n of nodes) {
+    if (n.type === 'fact') {
+      content += `<circle cx="${n.x.toFixed(1)}" cy="${n.y.toFixed(1)}" r="7.5" fill="var(--burgundy)" stroke="#fffdf8" stroke-width="1.2"><title>${escXml(n.label)}</title></circle>`;
+    } else {
+      const color = n.adaptive_correct ? 'var(--periwinkle)' : 'var(--fail)';
+      content += `<circle cx="${n.x.toFixed(1)}" cy="${n.y.toFixed(1)}" r="4.5" fill="${color}" stroke="#fffdf8" stroke-width="0.8"><title>${escXml('+' + n.delta + ' sessions: ' + (n.adaptive_correct ? 'recalled correctly' : 'missed') + ' (score ' + n.adaptive_score + ')')}</title></circle>`;
+    }
+  }
+  svg.innerHTML = content;
+}
+
+function escXml(s) {
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function init() {
+  document.getElementById('meta-line').textContent =
+    DATA.num_conversations + ' facts / ' + DATA.total_queries + ' queries';
+  document.getElementById('acc-value').textContent =
+    Math.round(DATA.adaptive_accuracy * 100) + '%';
+  document.getElementById('edges-value').textContent =
+    DATA.adaptive_correct + ' / ' + DATA.total_queries;
+  document.getElementById('delta-value').textContent =
+    DATA.by_delta.map(d => `+${d.delta}: ${Math.round((d.correct / d.total) * 100)}%`).join('   ');
+  document.getElementById('footer-line').textContent =
+    'seed ' + DATA.seed + ' · ' + DATA.nodes.filter(n => n.type === 'fact').length + ' facts · ' +
+    DATA.edges.length + ' recall attempts · baseline for comparison: ' + Math.round(DATA.baseline_accuracy * 100) + '%';
+
+  const { nodes, nodeById } = buildSimNodes();
+  runSimulation(nodes, nodeById, DATA.edges);
+}
+
+init();
+</script>
+</body>
+</html>
