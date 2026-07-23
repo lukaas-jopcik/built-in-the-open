@@ -1,0 +1,8 @@
+{
+  "steps": [
+    {"id": "fetch_a", "tool": "fetch", "args": {"file": "fixtures/a.json"}},
+    {"id": "aggregate", "tool": "aggregate", "deps": ["fetch_a"], "args": {}},
+    {"id": "check_total", "tool": "evaluate", "deps": ["aggregate"], "args": {"expr": "total > 0 and count == 3"}}
+  ],
+  "output": "legit_evaluate_safe_report.json"
+}

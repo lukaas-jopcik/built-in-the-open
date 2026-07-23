@@ -1,0 +1,12 @@
+{
+  "steps": [
+    {
+      "id": "attack",
+      "tool": "evaluate",
+      "args": {
+        "technique": "nested eval()",
+        "expr": "eval('1+1')"
+      }
+    }
+  ]
+}

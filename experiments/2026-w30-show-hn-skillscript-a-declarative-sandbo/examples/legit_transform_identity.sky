@@ -1,0 +1,9 @@
+{
+  "steps": [
+    {"id": "fetch_a", "tool": "fetch", "args": {"file": "fixtures/a.json"}},
+    {"id": "transform", "tool": "transform", "deps": ["fetch_a"], "args": {"op": "identity"}},
+    {"id": "aggregate", "tool": "aggregate", "deps": ["transform"], "args": {}},
+    {"id": "report", "tool": "report_step", "deps": ["aggregate"], "args": {}}
+  ],
+  "output": "legit_transform_identity_report.json"
+}

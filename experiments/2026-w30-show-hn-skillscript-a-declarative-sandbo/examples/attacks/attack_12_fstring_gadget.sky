@@ -1,0 +1,12 @@
+{
+  "steps": [
+    {
+      "id": "attack",
+      "tool": "evaluate",
+      "args": {
+        "technique": "f-string (JoinedStr) mro gadget",
+        "expr": "f\"{().__class__.__mro__}\""
+      }
+    }
+  ]
+}

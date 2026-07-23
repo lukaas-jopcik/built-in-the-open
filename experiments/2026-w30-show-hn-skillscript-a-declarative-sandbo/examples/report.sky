@@ -1,0 +1,11 @@
+{
+  "steps": [
+    {"id": "fetch_a", "tool": "fetch", "args": {"file": "fixtures/a.json"}},
+    {"id": "fetch_b", "tool": "fetch", "args": {"file": "fixtures/b.json"}},
+    {"id": "transform", "tool": "transform", "deps": ["fetch_a"], "args": {"op": "double_values"}},
+    {"id": "filter", "tool": "filter_step", "deps": ["fetch_b"], "args": {"predicate": "value > 5"}},
+    {"id": "aggregate", "tool": "aggregate", "deps": ["transform", "filter"], "args": {}},
+    {"id": "report", "tool": "report_step", "deps": ["aggregate"], "args": {}}
+  ],
+  "output": "report.json"
+}

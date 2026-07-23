@@ -1,0 +1,12 @@
+{
+  "steps": [
+    {
+      "id": "attack",
+      "tool": "evaluate",
+      "args": {
+        "technique": "bare exec()",
+        "expr": "exec('import os')"
+      }
+    }
+  ]
+}

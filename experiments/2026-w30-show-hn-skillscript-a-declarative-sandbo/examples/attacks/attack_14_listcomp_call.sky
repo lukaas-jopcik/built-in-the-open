@@ -1,0 +1,12 @@
+{
+  "steps": [
+    {
+      "id": "attack",
+      "tool": "evaluate",
+      "args": {
+        "technique": "list-comprehension smuggled call",
+        "expr": "[__import__('os') for _ in [1]]"
+      }
+    }
+  ]
+}

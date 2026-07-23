@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+report.json
+malicious_report.json
+trace.jsonl
+benchmark.json
+benchmark.md
+legit_*_report.json
+fuzz_report.json
+fuzz_report.md
+parallel_report.json
+parallel_report.md
+parallel_fanout_report.json

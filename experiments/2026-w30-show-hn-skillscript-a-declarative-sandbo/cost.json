@@ -1,0 +1,7 @@
+{
+  "experiment": "2026-w30-show-hn-skillscript-a-declarative-sandbo",
+  "cost_usd": 17.913,
+  "claude_runs": 24,
+  "window_from": "2026-07-20 08:02:19",
+  "note": "from cost.jsonl purpose=exp_* (subscription runs log $0)"
+}

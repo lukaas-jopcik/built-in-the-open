@@ -1,0 +1,12 @@
+{
+  "steps": [
+    {
+      "id": "attack",
+      "tool": "evaluate",
+      "args": {
+        "technique": "bit-shift operator DoS attempt (<< not whitelisted)",
+        "expr": "1 << 1000000000000"
+      }
+    }
+  ]
+}

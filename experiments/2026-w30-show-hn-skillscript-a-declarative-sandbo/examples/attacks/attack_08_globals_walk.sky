@@ -1,0 +1,12 @@
+{
+  "steps": [
+    {
+      "id": "attack",
+      "tool": "evaluate",
+      "args": {
+        "technique": "globals() walk",
+        "expr": "globals()['__builtins__']"
+      }
+    }
+  ]
+}

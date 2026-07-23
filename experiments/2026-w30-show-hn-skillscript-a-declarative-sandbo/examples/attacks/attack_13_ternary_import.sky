@@ -1,0 +1,12 @@
+{
+  "steps": [
+    {
+      "id": "attack",
+      "tool": "evaluate",
+      "args": {
+        "technique": "ternary-guarded __import__ (IfExp)",
+        "expr": "(__import__('os') if True else None)"
+      }
+    }
+  ]
+}

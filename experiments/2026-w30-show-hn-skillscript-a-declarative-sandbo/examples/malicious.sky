@@ -1,0 +1,58 @@
+{
+  "steps": [
+    {"id": "attack_01_os_system", "tool": "evaluate", "args": {
+      "technique": "os.system via __import__",
+      "expr": "__import__('os').system('id')"
+    }},
+    {"id": "attack_02_open_passwd", "tool": "evaluate", "args": {
+      "technique": "open() arbitrary file read",
+      "expr": "open('/etc/passwd').read()"
+    }},
+    {"id": "attack_03_socket_connect", "tool": "evaluate", "args": {
+      "technique": "socket.connect network escape",
+      "expr": "__import__('socket').socket().connect(('127.0.0.1', 80))"
+    }},
+    {"id": "attack_04_subprocess", "tool": "evaluate", "args": {
+      "technique": "subprocess.run process spawn",
+      "expr": "__import__('subprocess').run(['ls'])"
+    }},
+    {"id": "attack_05_dunder_import", "tool": "evaluate", "args": {
+      "technique": "bare __import__",
+      "expr": "__import__('os')"
+    }},
+    {"id": "attack_06_eval", "tool": "evaluate", "args": {
+      "technique": "nested eval()",
+      "expr": "eval('1+1')"
+    }},
+    {"id": "attack_07_exec", "tool": "evaluate", "args": {
+      "technique": "bare exec()",
+      "expr": "exec('import os')"
+    }},
+    {"id": "attack_08_globals_walk", "tool": "evaluate", "args": {
+      "technique": "globals() walk",
+      "expr": "globals()['__builtins__']"
+    }},
+    {"id": "attack_09_mro_gadget", "tool": "evaluate", "args": {
+      "technique": "__class__.__mro__ sandbox-escape gadget",
+      "expr": "().__class__.__mro__[1].__subclasses__()"
+    }},
+    {"id": "attack_10_lambda_bypass", "tool": "evaluate", "args": {
+      "technique": "lambda/decorator-style closure bypass",
+      "expr": "(lambda: __import__('os').system('id'))()"
+    }},
+    {"id": "scoreboard", "tool": "scoreboard_step", "deps": [
+      "attack_01_os_system",
+      "attack_02_open_passwd",
+      "attack_03_socket_connect",
+      "attack_04_subprocess",
+      "attack_05_dunder_import",
+      "attack_06_eval",
+      "attack_07_exec",
+      "attack_08_globals_walk",
+      "attack_09_mro_gadget",
+      "attack_10_lambda_bypass"
+    ], "args": {}}
+  ],
+  "final": "scoreboard",
+  "output": "malicious_report.json"
+}

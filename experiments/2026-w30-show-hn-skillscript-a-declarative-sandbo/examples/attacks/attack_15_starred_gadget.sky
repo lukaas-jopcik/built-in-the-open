@@ -1,0 +1,12 @@
+{
+  "steps": [
+    {
+      "id": "attack",
+      "tool": "evaluate",
+      "args": {
+        "technique": "starred unpacking of mro bases",
+        "expr": "[*().__class__.__bases__]"
+      }
+    }
+  ]
+}

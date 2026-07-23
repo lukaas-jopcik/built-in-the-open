@@ -1,0 +1,13 @@
+{
+  "steps": [
+    {"id": "branch_a", "tool": "slow_step", "deps": [], "args": {"name": "a", "value": 10, "delay_ms": 60}},
+    {"id": "branch_b", "tool": "slow_step", "deps": [], "args": {"name": "b", "value": 20, "delay_ms": 60}},
+    {"id": "branch_c", "tool": "slow_step", "deps": [], "args": {"name": "c", "value": 30, "delay_ms": 60}},
+    {"id": "branch_d", "tool": "slow_step", "deps": [], "args": {"name": "d", "value": 40, "delay_ms": 60}},
+    {"id": "branch_e", "tool": "slow_step", "deps": [], "args": {"name": "e", "value": 50, "delay_ms": 60}},
+    {"id": "aggregate", "tool": "aggregate", "deps": ["branch_a", "branch_b", "branch_c", "branch_d", "branch_e"], "args": {}},
+    {"id": "report", "tool": "report_step", "deps": ["aggregate"], "args": {}}
+  ],
+  "final": "report",
+  "output": "parallel_fanout_report.json"
+}

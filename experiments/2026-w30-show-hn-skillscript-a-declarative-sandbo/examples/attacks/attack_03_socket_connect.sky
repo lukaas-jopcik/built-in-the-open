@@ -1,0 +1,12 @@
+{
+  "steps": [
+    {
+      "id": "attack",
+      "tool": "evaluate",
+      "args": {
+        "technique": "socket.connect network escape",
+        "expr": "__import__('socket').socket().connect(('127.0.0.1', 80))"
+      }
+    }
+  ]
+}

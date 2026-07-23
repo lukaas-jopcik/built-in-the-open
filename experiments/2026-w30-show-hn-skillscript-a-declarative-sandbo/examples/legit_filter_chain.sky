@@ -1,0 +1,9 @@
+{
+  "steps": [
+    {"id": "fetch_b", "tool": "fetch", "args": {"file": "fixtures/b.json"}},
+    {"id": "filter", "tool": "filter_step", "deps": ["fetch_b"], "args": {"predicate": "value >= 3"}},
+    {"id": "aggregate", "tool": "aggregate", "deps": ["filter"], "args": {}},
+    {"id": "report", "tool": "report_step", "deps": ["aggregate"], "args": {}}
+  ],
+  "output": "legit_filter_chain_report.json"
+}

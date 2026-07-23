@@ -1,0 +1,12 @@
+{
+  "steps": [
+    {
+      "id": "attack",
+      "tool": "evaluate",
+      "args": {
+        "technique": "exponentiation operator DoS attempt (** not whitelisted)",
+        "expr": "2**2**2**2**2**2**2**2**2**2**2**2**2**2**2**2**2**2**2**2"
+      }
+    }
+  ]
+}

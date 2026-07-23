@@ -1,0 +1,12 @@
+{
+  "steps": [
+    {
+      "id": "attack",
+      "tool": "evaluate",
+      "args": {
+        "technique": "__class__.__mro__ sandbox-escape gadget",
+        "expr": "().__class__.__mro__[1].__subclasses__()"
+      }
+    }
+  ]
+}

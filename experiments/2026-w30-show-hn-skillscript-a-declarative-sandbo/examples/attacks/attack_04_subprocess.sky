@@ -1,0 +1,12 @@
+{
+  "steps": [
+    {
+      "id": "attack",
+      "tool": "evaluate",
+      "args": {
+        "technique": "subprocess.run process spawn",
+        "expr": "__import__('subprocess').run(['ls'])"
+      }
+    }
+  ]
+}

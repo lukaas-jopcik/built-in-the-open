@@ -1,0 +1,6 @@
+{
+  "steps": [
+    {"id": "fetch_a", "tool": "fetch", "args": {"file": "fixtures/a.json"}}
+  ],
+  "output": "legit_single_fetch_report.json"
+}

@@ -1,0 +1,27 @@
+{
+  "status": "ok",
+  "total": 29,
+  "count": 5,
+  "items": [
+    {
+      "name": "a1",
+      "value": 2
+    },
+    {
+      "name": "a2",
+      "value": 4
+    },
+    {
+      "name": "a3",
+      "value": 6
+    },
+    {
+      "name": "b1",
+      "value": 10
+    },
+    {
+      "name": "b3",
+      "value": 7
+    }
+  ]
+}

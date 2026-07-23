@@ -1,0 +1,12 @@
+{
+  "steps": [
+    {
+      "id": "attack",
+      "tool": "evaluate",
+      "args": {
+        "technique": "statement smuggling via semicolon (invalid in eval mode)",
+        "expr": "__import__('os'); pass"
+      }
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "steps": [
+    {
+      "id": "attack",
+      "tool": "evaluate",
+      "args": {
+        "technique": "chained attribute walk to __globals__",
+        "expr": "''.join.__globals__"
+      }
+    }
+  ]
+}

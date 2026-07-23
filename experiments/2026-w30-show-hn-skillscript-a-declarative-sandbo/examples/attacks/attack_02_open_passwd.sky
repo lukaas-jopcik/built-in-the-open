@@ -1,0 +1,12 @@
+{
+  "steps": [
+    {
+      "id": "attack",
+      "tool": "evaluate",
+      "args": {
+        "technique": "open() arbitrary file read",
+        "expr": "open('/etc/passwd').read()"
+      }
+    }
+  ]
+}
